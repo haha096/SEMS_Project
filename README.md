@@ -140,9 +140,11 @@ IoT 기반 실내 공기질 모니터링 및 제어 시스템의 웹서버 저�
 
 ## 프로젝트 실행 방법
 
-- 1. 만약 gridle연결 안되어있으면 gridle연결해야합니다
-- 2. cd frontend
-- 3. npm install
-- 4. npm start
+1. 만약 gridle연결 안되어있으면 gridle연결해야합니다
+2. cd frontend
+3. npm install
+4. npm start
+
+
 
 > 본 저장소는 동양미래대학교 졸업작품 "스마트 환경관리 시스템" 팀 프로젝트의 웹서버 구현용 저장소입니다.
