@@ -7,11 +7,20 @@ IoT 기반 실내 공기질 모니터링 및 제어 시스템의 웹서버 저�
 
 ## 📁 프로젝트 구조
 
-flask-backend/ # 라즈베리파이 + MQTT + 실시간 시각화 처리
-spring-backend/ # 사용자 인증, 제어 API, DB 처리 (Spring Boot)
-frontend/ # React 기반 사용자 UI
-.gitignore # Git 무시 설정
-README.md # 프로젝트 설명 및 협업 가이드
+- 📂 **flask-backend**  
+  └─ 라즈베리파이 + MQTT + 실시간 시각화 처리
+
+- 📂 **spring-backend**  
+  └─ 사용자 인증, 제어 API, DB 처리 (Spring Boot)
+
+- 📂 **frontend**  
+  └─ React 기반 사용자 UI
+
+- 📄 **.gitignore**  
+  └─ Git 무시 설정
+
+- 📄 **README.md**  
+  └─ 프로젝트 설명 및 협업 가이드
 
 
 ---
