@@ -109,7 +109,7 @@ README.md
 #### 사진10
 ![깃허브 저장소 접속 및 PR](https://github.com/user-attachments/assets/b7bb8e2c-d554-44c3-9170-9ecb48e145a3)
 
-*## 사진11 (주의 !!! PR할 base를 main -> dev로 변경)*
+## 사진 11 *주의 !!! PR할 base를 main -> dev로 변경*
 ![주의!! PR할 base를 main -> dev로 변경](https://github.com/user-attachments/assets/c09e9ae8-1df8-47ea-a6bd-af57c4a5768e)
 
 
