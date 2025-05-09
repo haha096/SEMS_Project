@@ -38,8 +38,14 @@ README.md
 3. IntelliJ 실행 → Get from VCS 클릭
 4. 복사한 URL 붙여넣기 → Clone 버튼 클릭
 5. 프로젝트가 IntelliJ에 자동으로 열림
+
+#### 사진1
 ![0 깃허브 주소 복사하기](https://github.com/user-attachments/assets/c9228c34-fd48-4637-97b4-3beebff94c18)
+
+#### 사진2
 ![0 IntelliJ 실행 및 프로젝트 생성](https://github.com/user-attachments/assets/eebf6e97-a219-45e7-94d1-d93db017c4f7)
+
+#### 사진3
 ![0 깃허브 주소 붙여 넣기 -> Clone](https://github.com/user-attachments/assets/4f7dae45-a971-45cd-8c7b-34b61bf477cd)
 
 ---
@@ -48,6 +54,8 @@ README.md
 
 1. IntelliJ 하단 좌측 main ▼ 클릭
 2. origin/dev 선택 → Checkout 클릭
+
+#### 사진4
 ![dev 체크아웃](https://github.com/user-attachments/assets/dacd1cfd-6293-4a83-92ef-c2b3174822f8)
 
 ---
@@ -57,8 +65,14 @@ README.md
 1. 하단 브랜치 이름 (dev ▼) 클릭 → New Branch
 2. 브랜치 이름 입력 (예: feature/기능명)
 3. 해당 브랜치로 자동 전환됨
+
+#### 사진5
 ![dev에 브런치 생성](https://github.com/user-attachments/assets/f47fb9bc-1dac-4e8b-9161-cf69e14ab923)
+
+#### 사진6
 ![브런치 이름 입력](https://github.com/user-attachments/assets/0fc06153-1e5a-4b38-8d7c-fa7943ec9065)
+
+#### 사진7
 ![해당 브런치로 자동 전환 확인](https://github.com/user-attachments/assets/3a7aacc2-3188-4c78-9a80-893f7bed51a7)
 
 ---
@@ -68,6 +82,8 @@ README.md
 - 코드 작성 후: VCS > Commit 또는 Ctrl + K
 - 커밋 메시지 작성
 - 커밋 버튼 클릭
+
+#### 사진8
 ![개발 완료 후 커밋](https://github.com/user-attachments/assets/10c35e44-a56b-46df-bafb-541f134e684c)
 
 ---
@@ -76,7 +92,8 @@ README.md
 
 - 커밋 후: Git > Push 또는 Ctrl + Shift + K
 - 원격 저장소에 feature/* 브랜치로 푸시됨
-  
+
+#### 사진9
 ![커밋 작성 및 푸시](https://github.com/user-attachments/assets/5faddf67-3ef0-45b7-a836-d5cc112a5239)
 
 ---
@@ -88,8 +105,11 @@ README.md
 3. **base: dev ← compare: feature/*** 확인
 4. 제목 & 설명 작성
 5. Create pull request 클릭
-   
+
+#### 사진10
 ![깃허브 저장소 접속 및 PR](https://github.com/user-attachments/assets/b7bb8e2c-d554-44c3-9170-9ecb48e145a3)
+
+#### 사진11
 ![주의!! PR할 base를 main -> dev로 변경](https://github.com/user-attachments/assets/c09e9ae8-1df8-47ea-a6bd-af57c4a5768e)
 
 
