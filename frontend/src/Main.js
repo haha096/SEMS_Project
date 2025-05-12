@@ -1,9 +1,33 @@
 import { useNavigate } from "react-router-dom";
 import "./css/Main.css";
+import React, { useEffect, useState } from 'react';
 
-function Main({ isLoggedIn, userNickname, message }) {
+function Main({ isLoggedIn, userNickname, message, socket }) {
 
     const navigate = useNavigate();
+    const [sensorData, setSensorData] = useState(null);
+
+    useEffect(() => {
+        if (!socket) return;
+
+    socket.onmessage = (event) => {
+        //console.log("📡 수신된 센서 데이터:", event.data);
+        const parsedData = JSON.parse(event.data);
+        setSensorData(parsedData);
+        localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+    };
+
+    const savedData = localStorage.getItem("sensorData");
+    if (savedData) {
+        setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+    }
+}, [socket]);
+
+    // 센서 데이터가 없을 경우 표시할 기본 메시지
+    if (!sensorData) {
+        return <div>Loading...</div>;
+    }
+
 
     return (
         <div className="container1">
@@ -17,9 +41,9 @@ function Main({ isLoggedIn, userNickname, message }) {
                     <div className="indoor_content">
                         <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon"/>
                         <div className="info-text">
-                            <p>현재 실내 온도 : 23도</p>
-                            <p>현재 실내 습도 : 43%</p>
-                            <p>현재 실내 미세먼지 : 24ug</p>
+                            <p>현재 실내 온도 : {sensorData["TEMP"]}도</p>
+                            <p>현재 실내 습도 : {sensorData["HUM"]}%</p>
+                            <p>현재 실내 미세먼지 : {sensorData["PM1.0"]}ug</p>
                         </div>
                     </div> {/* indoor_content */}
                 </div> {/* container3 */}
