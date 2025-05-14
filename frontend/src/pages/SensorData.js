@@ -29,6 +29,7 @@ function SensorData() {
                            <tr>
                                <th>Id</th>
                                <th>시간</th>
+                               <th>Current</th>
                                <th>Temperature</th>
                                <th>Humidity</th>
                                <th>Mode</th>
@@ -44,6 +45,7 @@ function SensorData() {
                                 <tr key={index}>
                                     <td>{data["id"]}</td>
                                     <td>{data["timestamp"]}</td>
+                                    <td>{data["CURRENT"]}</td>
                                     <td>{data["TEMP"]}</td>
                                     <td>{data["HUM"]}</td>
                                     <td>{data["MODE"]}</td>

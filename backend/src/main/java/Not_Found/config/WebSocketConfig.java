@@ -23,9 +23,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(chatHandler, "/ws/chat")
                 .setAllowedOrigins("*"); // CORS 허용
-        registry.addHandler(sensorWebSocketHandler, "/")
-                .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
-      registry.addHandler(sensorWebSocketHandler, "/sensor")
+//        registry.addHandler(sensorWebSocketHandler, "/")
+//                .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
+      registry.addHandler(sensorWebSocketHandler, "/ws/sensor")
               .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
     }
 }
