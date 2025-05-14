@@ -26,6 +26,7 @@ public class SensorService {
     public SensorEntity saveSensorData(SensorData dto) {
         // DTO → Entity 변환
         SensorEntity entity = new SensorEntity();
+        entity.setCurrent(dto.getCurrent());
         entity.setTemp(dto.getTemp());
         entity.setHum(dto.getHum());
         entity.setMode(dto.getMode());
@@ -51,6 +52,7 @@ public class SensorService {
                     // timestamp 변환
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                     dto.setTimestamp(entity.getTimestamp().format(formatter));  // LocalDateTime을 String으로 포맷
+                    dto.setCurrent(entity.getCurrent());
                     dto.setTemp(entity.getTemp());
                     dto.setHum(entity.getHum());
                     dto.setMode(entity.getMode());
@@ -75,6 +77,7 @@ public class SensorService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             dto.setTimestamp(entity.getTimestamp().format(formatter));  // LocalDateTime을 String으로 포맷
             dto.setId(entity.getId());
+            dto.setCurrent(entity.getCurrent());
             dto.setTemp(entity.getTemp());
             dto.setHum(entity.getHum());
             dto.setMode(entity.getMode());

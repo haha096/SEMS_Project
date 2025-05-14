@@ -12,6 +12,9 @@ public class SensorData {
     @JsonProperty("timestamp")
     private String timestamp;
 
+    @JsonProperty("CURRENT")
+    private double current;
+
     @JsonProperty("TEMP")
     private double temp;
 
