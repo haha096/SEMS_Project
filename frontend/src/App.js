@@ -22,7 +22,7 @@ function App() {
 
    useEffect(() => {
      // WebSocket 연결
-     const socket = new WebSocket('ws://localhost:8080/');  // WebSocket 서버 주소
+     const socket = new WebSocket('ws://localhost:8080/ws/sensor');  // WebSocket 서버 주소
      socketRef.current = socket;
 
      // 서버로부터 메시지를 받았을 때
