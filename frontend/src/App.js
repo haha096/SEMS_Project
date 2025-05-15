@@ -1,6 +1,7 @@
 import './App.css';
 import { useEffect, useState, useRef } from "react";
 import AppRouter from "./AppRouter";
+import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
 
 function App() {
     const socketRef = useRef(null);
@@ -50,6 +51,7 @@ function App() {
 
 
     return (
+    <div>
         <AppRouter
             message={message}
             isLoggedIn={isLoggedIn}
@@ -58,6 +60,8 @@ function App() {
             handleLogout={handleLogout}
             socket={socketRef.current}
         />
+
+    </div>
     );
 }
 

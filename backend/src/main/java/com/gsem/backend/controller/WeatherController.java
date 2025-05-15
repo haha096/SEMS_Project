@@ -2,27 +2,11 @@ package com.gsem.backend.controller;
 
 import com.gsem.backend.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-//@RestController
-//public class WeatherController {
-//    private final WeatherService weatherService;
-//
-//    public WeatherController(WeatherService weatherService) {
-//        this.weatherService = weatherService;
-//    }
-//
-//    @GetMapping("/weather/outdoor")
-//    public ResponseEntity<String> getOutdoorWeather(
-//            @RequestParam(defaultValue = "58") int nx,
-//            @RequestParam(defaultValue = "125") int ny
-//    ) {
-//        String result = weatherService.getWeatherData(nx, ny);
-//        return ResponseEntity.ok(result);
-//    }
-//}
 
 @RestController
 @RequestMapping("/weather")

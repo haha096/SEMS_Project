@@ -9,6 +9,10 @@ import Footer from "./components/Footer";
 import FindId from "./Login/FindId";
 import FindPassword from "./Login/FindPassword";
 import MonitorPage from './pages/MonitorPage';
+import DataAnalysis from "./page/DataAnalysis";
+import Monitoring_indoor from "./page/Monitoring/Monitoring_indoor";
+import Monitoring_outdoor from "./page/Monitoring/Monitoring_outdoor";
+import Device_Control from "./page/Device_Control";
 
 function AppRouter({ message, isLoggedIn, userNickname, handleLogin, handleLogout, socket }) {
     return (
@@ -24,6 +28,10 @@ function AppRouter({ message, isLoggedIn, userNickname, handleLogin, handleLogou
                 <Route path="/monitor" element={<MonitorPage />} />
                 <Route path="/chat" element={<Chat />} /> {/* 채팅 페이지 */}
                 <Route path="/sensor" element={<SensorData />} /> {/* 센서 페이지 */}
+                <Route path="/dataanalysis" element={<DataAnalysis />} />
+                <Route path="/monitoring_indoor" element={<Monitoring_indoor />} />
+                <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
+                <Route path="/devicecontrol" element={<Device_Control />} />
             </Routes>
 
             <Footer />
