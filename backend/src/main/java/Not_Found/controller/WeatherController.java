@@ -1,4 +1,4 @@
-package com.gsem.backend.controller;
+package Not_Found.controller;
 
 import com.gsem.backend.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
