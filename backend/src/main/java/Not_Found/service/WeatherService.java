@@ -1,4 +1,4 @@
-package com.gsem.backend.service;
+package Not_Found.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;

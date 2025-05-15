@@ -1,4 +1,4 @@
-package com.gsem.backend.dto;
+package Not_Found.dto;
 
 public class DustDto {
     private String dataTime;

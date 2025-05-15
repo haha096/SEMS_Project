@@ -1,8 +1,8 @@
-package com.gsem.backend.service;
+package Not_Found.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gsem.backend.dto.DustDto;
+import Not_Found.dto.DustDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;

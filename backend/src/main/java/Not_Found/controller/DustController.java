@@ -1,7 +1,7 @@
-package com.gsem.backend.controller;
+package Not_Found.controller;
 
-import com.gsem.backend.dto.DustDto;
-import com.gsem.backend.service.DustService;
+import Not_Found.dto.DustDto;
+import Not_Found.service.DustService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
