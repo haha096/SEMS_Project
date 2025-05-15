@@ -7,21 +7,72 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     const navigate = useNavigate();
     const [sensorData, setSensorData] = useState(null);
 
+    // 실외 온습도 & 미세먼지 상태
+    const [outdoorTemperature, setOutdoorTemperature] = useState("-");
+    const [outdoorHumidity, setOutdoorHumidity] = useState("-");
+    const [outdoorPm10, setOutdoorPm10] = useState("-");
+
+//     useEffect(() => {
+//         if (!socket) return;
+//
+//     socket.onmessage = (event) => {
+//         //console.log("📡 수신된 센서 데이터:", event.data);
+//         const parsedData = JSON.parse(event.data);
+//         setSensorData(parsedData);
+//         localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+//     };
+//
+//     const savedData = localStorage.getItem("sensorData");
+//     if (savedData) {
+//         setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+//     }
+// }, [socket]);
+
     useEffect(() => {
-        if (!socket) return;
+        if (socket) {
+            socket.onmessage = (event) => {
+                const parsedData = JSON.parse(event.data);
+                setSensorData(parsedData);
+                localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+            };
+        }
 
-    socket.onmessage = (event) => {
-        //console.log("📡 수신된 센서 데이터:", event.data);
-        const parsedData = JSON.parse(event.data);
-        setSensorData(parsedData);
-        localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
-    };
+        const savedData = localStorage.getItem("sensorData");
+        if (savedData) {
+            setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+        } else {
+            // 👉 임시 테스트 데이터 (소켓 없을 때 대비)
+            setSensorData({
+                "TEMP": "22.5",
+                "HUM": "40",
+                "PM1.0": "15"
+            });
+        }
+    }, [socket]);
 
-    const savedData = localStorage.getItem("sensorData");
-    if (savedData) {
-        setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
-    }
-}, [socket]);
+    useEffect(() => {
+        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+            .then(res => res.text())
+            .then(data => {
+                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
+                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
+                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
+                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
+            })
+            .catch(() => {
+                setOutdoorTemperature("-");
+                setOutdoorHumidity("-");
+            });
+
+        fetch("http://localhost:8080/api/dust")
+            .then(res => res.json())
+            .then(data => {
+                setOutdoorPm10(data.pm10Value || "-");
+            })
+            .catch(() => {
+                setOutdoorPm10("-");
+            });
+    }, []);
 
     // 센서 데이터가 없을 경우 표시할 기본 메시지
     if (!sensorData) {
@@ -55,9 +106,9 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                     <div className="outdoor_content">
                         <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon"/>
                         <div className="info-text">
-                            <p>현재 실외 온도 : 23도</p>
-                            <p>현재 실외 습도 : 43%</p>
-                            <p>현재 실외 미세먼지 : 24ug</p>
+                            <p>현재 실외 온도 : {outdoorTemperature}도</p>
+                            <p>현재 실외 습도 : {outdoorHumidity}%</p>
+                            <p>현재 실외 미세먼지 : {outdoorPm10}ug</p>
                         </div>
                     </div> {/* outdoor_content */}
                 </div> {/* container3 */}
