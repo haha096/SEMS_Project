@@ -3,16 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import AppRouter from "./AppRouter";
 import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
 
-import Login from "./Login/Login";
-import Signup from "./Login/Signup";
-import Main from "./Main";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import DataAnalysis from "./page/DataAnalysis";
-import Monitoring_indoor from "./page/Monitoring/Monitoring_indoor";
-import Monitoring_outdoor from "./page/Monitoring/Monitoring_outdoor";
-import Device_Control from "./page/Device_Control";
-
 function App() {
     const socketRef = useRef(null);
 
@@ -71,21 +61,6 @@ function App() {
             socket={socketRef.current}
         />
 
-        <Router>
-            <Header />
-
-            <Routes>
-                <Route path="/" element={<Main message={message} />} />
-                <Route path="/login" element={<Login handleLogin={handleLogin} />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/dataanalysis" element={<DataAnalysis />} />
-                <Route path="/monitoring_indoor" element={<Monitoring_indoor />} />
-                <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
-                <Route path="/devicecontrol" element={<Device_Control />} />
-            </Routes>
-
-            <Footer />
-        </Router>
     </div>
     );
 }
