@@ -2,10 +2,24 @@ import { useNavigate } from "react-router-dom";
 import "./css/Main.css";
 import React, { useEffect, useState } from 'react';
 
+import OutdoorBlue from './assets/outdoor_img/outdoor_blue.png';
+import OutdoorGreen from './assets/outdoor_img/outdoor_green.png';
+import OutdoorYellow from './assets/outdoor_img/outdoor_yellow.png';
+import OutdoorOrange from './assets/outdoor_img/outdoor_orange.PNG';
+import OutdoorRed from './assets/outdoor_img/outdoor_red.png';
+
 function Main({ isLoggedIn, userNickname, message, socket }) {
 
     const navigate = useNavigate();
     const [sensorData, setSensorData] = useState(null);
+
+    const selectOutdoorImageByTemperature = (temp) => {
+        if (temp >= 30) return OutdoorRed;
+        if (temp >= 26) return OutdoorOrange;
+        if (temp >= 22) return OutdoorYellow;
+        if (temp >= 19) return OutdoorGreen;
+        return OutdoorBlue;
+    };
 
     // 실외 온습도 & 미세먼지 상태
     const [outdoorTemperature, setOutdoorTemperature] = useState("-");
@@ -80,6 +94,10 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
         return <div>Loading...</div>;
     }
 
+    //실외데이터에 맞게 바꾼 이미지
+    const outdoorTempValue = parseFloat(outdoorTemperature);
+    const outdoorImage = selectOutdoorImageByTemperature(outdoorTempValue);
+
 
     return (
         <div className="container1">
@@ -105,7 +123,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                 <div className="container3" id="outdoor_container">
                     <div id="outdoor" className="custom-box">실외상황</div>
                     <div className="outdoor_content">
-                        <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon"/>
+                        <img src={outdoorImage} name="outdoor_image" className="icon" />
                         <div className="info-text">
                             <p>현재 실외 온도 : {outdoorTemperature}도</p>
                             <p>현재 실외 습도 : {outdoorHumidity}%</p>
