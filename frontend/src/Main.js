@@ -50,6 +50,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
         }
     }, [socket]);
 
+    //실외 온습도, 미세먼지 함수
     useEffect(() => {
         fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
             .then(res => res.text())
