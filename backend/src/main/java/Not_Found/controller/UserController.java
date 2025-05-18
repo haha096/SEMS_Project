@@ -3,6 +3,7 @@ package Not_Found.controller;
 import Not_Found.model.dto.UserDTO;
 import Not_Found.model.entity.User;
 import Not_Found.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -28,17 +30,44 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> login(@RequestBody UserDTO userDTO, HttpSession session) {
         Optional<User> userOpt = userService.getUserIfValid(userDTO.getId(), userDTO.getPassword());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("nickname", user.getNickname());
+            session.setAttribute("email", user.getEmail());
+
+            System.out.println("로그인 세션 ID: " + session.getId());
+            System.out.println("로그인 저장된 userId: " + session.getAttribute("userId"));
+
             Map<String, Object> response = new HashMap<>();
+            response.put("userId", user.getId());
             response.put("nickname", user.getNickname());
+            response.put("email", user.getEmail());
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> error = new HashMap<>();
             error.put("message", "아이디 또는 비밀번호가 틀렸습니다.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    //로그인하고 내정보 페이지에 정보를 넣기 위한 GetMapping
+    @GetMapping("/session")
+    public ResponseEntity<?> checkSession(HttpSession session) {
+        Object userId = session.getAttribute("userId");
+        System.out.println("세션 확인 - userId: " + userId);
+        System.out.println("저장된 userId: " + session.getAttribute("userId"));
+
+        if (userId != null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", userId);
+            response.put("nickname", session.getAttribute("nickname"));
+            response.put("email", session.getAttribute("email"));
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 상태가 아닙니다.");
         }
     }
 
@@ -67,4 +96,6 @@ public class UserController {
 
         return ResponseEntity.ok("중복 없음");
     }
+
+
 }

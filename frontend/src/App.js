@@ -49,6 +49,25 @@ function App() {
      };
    }, []);  // 빈 배열을 넣어서 컴포넌트가 마운트될 때만 실행
 
+    //로그인 세션
+    useEffect(() => {
+        fetch('http://localhost:8080/api/user/session', {
+            credentials: 'include'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error();
+                return res.json();
+            })
+            .then(data => {
+                setIsLoggedIn(true);
+                setUserNickname(data.nickname);
+            })
+            .catch(() => {
+                setIsLoggedIn(false);
+                setUserNickname("");
+            });
+    }, []);
+
 
     return (
     <div>
