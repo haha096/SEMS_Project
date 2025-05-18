@@ -16,6 +16,7 @@ import Device_Control from "./page/Device_Control";
 import MyPage from "./mypage/MyPage";
 import UpdateId from "./mypage/UpdateId";
 import UpdatePwd from "./mypage/UpdatePwd";
+
 import {useEffect, useState} from "react";
 
 function AppRouter({ message, isLoggedIn, userNickname, handleLogin, handleLogout, socket }) {
