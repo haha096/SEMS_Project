@@ -72,6 +72,13 @@ public class UserController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();  // 세션 완전 삭제
+        System.out.println("세션이 삭제되었습니다. 로그아웃 성공");
+        return ResponseEntity.ok("로그아웃 성공");
+    }
+
     // 관리자 확인
     @GetMapping("/isAdmin/{id}")
     public boolean isAdmin(@PathVariable String id) {

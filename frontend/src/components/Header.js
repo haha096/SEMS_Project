@@ -13,6 +13,8 @@ function Header({ isLoggedIn, handleLogout }) {
         }
     };
 
+
+
     return (
         <header className="header">
             <Link to="/" style={{ textDecoration: 'none' }}>

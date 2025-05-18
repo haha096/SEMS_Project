@@ -16,8 +16,15 @@ function App() {
     };
 
     const handleLogout = () => {
-        setIsLoggedIn(false);
-        setUserNickname("");
+        fetch("http://localhost:8080/api/user/logout", {
+            method: "POST",
+            credentials: "include"
+        })
+            .then(() => {
+                console.log("로그아웃 완료");
+                window.location.href = "/";
+            })
+            .catch(err => console.error("로그아웃 실패:", err));
     };
 
    useEffect(() => {
