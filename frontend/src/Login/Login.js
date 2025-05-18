@@ -19,7 +19,8 @@ function Login({ handleLogin }) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ id: id.trim(), password: password.trim() })
+                body: JSON.stringify({ id: id.trim(), password: password.trim() }),
+                credentials: "include"
             });
 
             const result = await response.json(); // JSON 응답 받기

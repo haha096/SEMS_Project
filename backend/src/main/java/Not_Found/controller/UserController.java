@@ -40,6 +40,7 @@ public class UserController {
 
             System.out.println("로그인 세션 ID: " + session.getId());
             System.out.println("로그인 저장된 userId: " + session.getAttribute("userId"));
+            System.out.println("가져온 User 정보: " + user);
 
             Map<String, Object> response = new HashMap<>();
             response.put("userId", user.getId());

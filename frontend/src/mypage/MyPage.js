@@ -44,7 +44,10 @@ function MyPage(){
                 }
                 return res.json();
             })
-            .then(data => setUserInfo(data))
+            .then(data =>{
+                console.log("마이페이지 유저 정보:", data);  // 👉 데이터 확인용
+                setUserInfo(data);
+            })
             .catch(err => {
                 console.error(err.message);
                 alert("로그인 후 이용해 주세요.");
@@ -65,7 +68,7 @@ function MyPage(){
 
                     <div className="mypage_content2">
                         <div className="mypage_name">{userInfo.nickname}님 (사용자)</div>
-                        <div className="mypage_id">아이디 : </div>
+                        <div className="mypage_id">아이디 : {userInfo.userId}</div>
                         <div className="mypage_email">이메일 : {userInfo.email}</div>
                     </div>
 
