@@ -14,6 +14,8 @@ import Monitoring_indoor from "./page/Monitoring/Monitoring_indoor";
 import Monitoring_outdoor from "./page/Monitoring/Monitoring_outdoor";
 import Device_Control from "./page/Device_Control";
 import MyPage from "./mypage/MyPage";
+import UpdateId from "./mypage/UpdateId";
+import UpdatePwd from "./mypage/UpdatePwd";
 import {useEffect, useState} from "react";
 
 function AppRouter({ message, isLoggedIn, userNickname, handleLogin, handleLogout, socket }) {
@@ -36,6 +38,8 @@ function AppRouter({ message, isLoggedIn, userNickname, handleLogin, handleLogou
                 <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
                 <Route path="/devicecontrol" element={<Device_Control />} />
                 <Route path="/mypage" element={<MyPage />} />
+                <Route path="/updateid" element={<UpdateId />} />
+                <Route path="/updatepwd" element={<UpdatePwd />} />
             </Routes>
 
             <Footer />

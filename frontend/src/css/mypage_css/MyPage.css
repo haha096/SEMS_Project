@@ -36,7 +36,7 @@
     margin-top: 32px;
 }
 
-.mypage-actions button {
+.mypage-actions a {
     background: none;
     border: none;
     color: black;
@@ -44,6 +44,6 @@
     font-size: 21px;
 }
 
-.mypage-actions button:hover {
+.mypage-actions a:hover {
     text-decoration: underline;
 }

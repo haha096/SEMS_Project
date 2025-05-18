@@ -77,9 +77,9 @@ function MyPage(){
 
 
             <div className="mypage-actions">
-                <button>아이디 수정</button>
+                <Link to="/UpdateId" style={{ textDecoration: 'none' }}>아이디 변경</Link>
                 <span>|</span>
-                <button>비밀번호 수정</button>
+                <Link to="/UpdatePwd" style={{ textDecoration: 'none' }}>비밀번호 변경</Link>
             </div>
         </div>
     );
