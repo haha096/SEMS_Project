@@ -101,29 +101,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             });
     }, []);
 
-    useEffect(() => {
-        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
-            .then(res => res.text())
-            .then(data => {
-                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
-                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
-                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
-                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
-            })
-            .catch(() => {
-                setOutdoorTemperature("-");
-                setOutdoorHumidity("-");
-            });
 
-        fetch("http://localhost:8080/api/dust")
-            .then(res => res.json())
-            .then(data => {
-                setOutdoorPm10(data.pm10Value || "-");
-            })
-            .catch(() => {
-                setOutdoorPm10("-");
-            });
-    }, []);
 
     // 센서 데이터가 없을 경우 표시할 기본 메시지
     if (!sensorData) {
