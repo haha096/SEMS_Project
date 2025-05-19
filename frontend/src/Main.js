@@ -30,13 +30,14 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     useEffect(() => {
         if (!socket) return;
 
-    socket.onmessage = (event) => {
-        //console.log("📡 수신된 센서 데이터:", event.data);
-        const parsedData = JSON.parse(event.data);
-        setSensorData(parsedData);
-        localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+        socket.onmessage = (event) => {
+            //console.log("📡 수신된 센서 데이터:", event.data);
+            const parsedData = JSON.parse(event.data);
+            setSensorData(parsedData);
+            localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
 
-    };
+        };
+    },[socket]);
 
 //     useEffect(() => {
 //         if (!socket) return;
