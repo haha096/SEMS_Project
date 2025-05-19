@@ -13,18 +13,30 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     const navigate = useNavigate();
     const [sensorData, setSensorData] = useState(null);
 
+
     const selectOutdoorImageByTemperature = (temp) => {
         if (temp >= 30) return OutdoorRed;
         if (temp >= 26) return OutdoorOrange;
         if (temp >= 22) return OutdoorYellow;
         if (temp >= 19) return OutdoorGreen;
         return OutdoorBlue;
-    };
+    }
 
     // 실외 온습도 & 미세먼지 상태
     const [outdoorTemperature, setOutdoorTemperature] = useState("-");
     const [outdoorHumidity, setOutdoorHumidity] = useState("-");
     const [outdoorPm10, setOutdoorPm10] = useState("-");
+
+    useEffect(() => {
+        if (!socket) return;
+
+    socket.onmessage = (event) => {
+        //console.log("📡 수신된 센서 데이터:", event.data);
+        const parsedData = JSON.parse(event.data);
+        setSensorData(parsedData);
+        localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+
+    };
 
 //     useEffect(() => {
 //         if (!socket) return;
@@ -65,6 +77,30 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     }, [socket]);
 
     //실외 온습도, 미세먼지 함수
+    useEffect(() => {
+        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+            .then(res => res.text())
+            .then(data => {
+                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
+                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
+                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
+                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
+            })
+            .catch(() => {
+                setOutdoorTemperature("-");
+                setOutdoorHumidity("-");
+            });
+
+        fetch("http://localhost:8080/api/dust")
+            .then(res => res.json())
+            .then(data => {
+                setOutdoorPm10(data.pm10Value || "-");
+            })
+            .catch(() => {
+                setOutdoorPm10("-");
+            });
+    }, []);
+
     useEffect(() => {
         fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
             .then(res => res.text())

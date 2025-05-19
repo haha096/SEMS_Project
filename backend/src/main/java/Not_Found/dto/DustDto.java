@@ -1,5 +1,6 @@
 package Not_Found.dto;
 
+
 public class DustDto {
     private String dataTime;
     private String pm10Value;
@@ -23,3 +24,4 @@ public class DustDto {
     public String getPm25Grade() { return pm25Grade; }
     public void setPm25Grade(String pm25Grade) { this.pm25Grade = pm25Grade; }
 }
+
