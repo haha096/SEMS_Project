@@ -6,11 +6,19 @@ function FirstRoom1(){
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
+    const [type, setType] = useState('temperature'); //온도를 선택하면
+                                                                    //온도 그래프를 보이게하도록 설계
+    
     const [chartUrl, setChartUrl] = useState("http://localhost:5000/chart");
 
     const handleSearch = () => {
-        const timestamp = new Date().getTime(); // 현재 시간으로 쿼리 파라미터 생성
-        setChartUrl(`http://localhost:5000/chart?ts=${timestamp}`);
+        if (!startDate || !endDate) {
+            alert("날짜를 선택하세요.");
+            return;
+        }
+
+        const url = `http://localhost:5000/chart?start=${startDate}&end=${endDate}&type=${type}`;
+        setChartUrl(url);
     };
 
     return(
@@ -41,15 +49,21 @@ function FirstRoom1(){
 
                     {/* 항목 선택 */}
                     <div className="weather-container">
-                        <label><input type="radio" name="weatherType" value="temperature"/> 온도</label>
-                        <label><input type="radio" name="weatherType" value="humidity"/> 습도</label>
-                        <label><input type="radio" name="weatherType" value="dust"/> 미세먼지</label>
+                        <label><input type="radio" name="weatherType" value="temperature"
+                                      checked={type === 'temperature'} onChange={(e) => setType(e.target.value)}/>
+                            온도</label>
+                        <label><input type="radio" name="weatherType" value="humidity"
+                                      checked={type === 'humidity'} onChange={(e) => setType(e.target.value)}/>
+                            습도</label>
+                        <label><input type="radio" name="weatherType" value="dust"
+                                      checked={type === 'dust'} onChange={(e) => setType(e.target.value)}/>
+                            미세먼지</label>
                     </div>
                 </div>
 
                 <div className="search-button-container">
                     {/* 조회 버튼 */}
-                    <button className="search-button">조회</button>
+                    <button className="search-button" onClick={handleSearch}>조회</button>
                 </div>
 
             </div>
