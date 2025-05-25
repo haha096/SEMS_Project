@@ -173,7 +173,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
                  <p>Spring에서 받은 메시지: {message}</p>
-                 <p>센서 데이터: {JSON.stringify(sensorData)}
+                 <p>센서 데이터: {JSON.stringify(sensorData)}</p>
             </div>
 
         </div> /* container1 */
