@@ -30,52 +30,15 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     useEffect(() => {
         if (!socket) return;
 
-        socket.onmessage = (event) => {
-            //console.log("📡 수신된 센서 데이터:", event.data);
-            const parsedData = JSON.parse(event.data);
-            setSensorData(parsedData);
-            localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+    socket.onmessage = (event) => {
+        //console.log("📡 수신된 센서 데이터:", event.data);
+        const parsedData = JSON.parse(event.data);
+        setSensorData(parsedData);
+    };
 
-        };
-    },[socket]);
+}, [socket]);
 
-//     useEffect(() => {
-//         if (!socket) return;
-//
-//     socket.onmessage = (event) => {
-//         //console.log("📡 수신된 센서 데이터:", event.data);
-//         const parsedData = JSON.parse(event.data);
-//         setSensorData(parsedData);
-//         localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
-//     };
-//
-//     const savedData = localStorage.getItem("sensorData");
-//     if (savedData) {
-//         setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
-//     }
-// }, [socket]);
 
-    useEffect(() => {
-        if (socket) {
-            socket.onmessage = (event) => {
-                const parsedData = JSON.parse(event.data);
-                setSensorData(parsedData);
-                localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
-            };
-        }
-
-        const savedData = localStorage.getItem("sensorData");
-        if (savedData) {
-            setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
-        } else {
-            // 👉 임시 테스트 데이터 (소켓 없을 때 대비)
-            setSensorData({
-                "TEMP": "22.5",
-                "HUM": "40",
-                "PM1.0": "15"
-            });
-        }
-    }, [socket]);
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
@@ -209,7 +172,8 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             <div className="empty"></div>
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
-                <p>Spring에서 받은 메시지: {message}</p>
+                 <p>Spring에서 받은 메시지: {message}</p>
+                 <p>센서 데이터: {JSON.stringify(sensorData)}
             </div>
 
         </div> /* container1 */
