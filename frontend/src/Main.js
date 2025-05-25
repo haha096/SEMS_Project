@@ -14,13 +14,8 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
         //console.log("📡 수신된 센서 데이터:", event.data);
         const parsedData = JSON.parse(event.data);
         setSensorData(parsedData);
-        localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
     };
 
-    const savedData = localStorage.getItem("sensorData");
-    if (savedData) {
-        setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
-    }
 }, [socket]);
 
     // 센서 데이터가 없을 경우 표시할 기본 메시지
@@ -125,6 +120,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
                 <p>Spring에서 받은 메시지: {message}</p>
+                <p>센서 데이터: {JSON.stringify(sensorData)}</p>
             </div>
 
         </div> /* container1 */
