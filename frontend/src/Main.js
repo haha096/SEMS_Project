@@ -268,6 +268,46 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
         return OutdoorBlue;
     }
 
+    //실제 데이터 가져와서 메인페이지에 넣을 수 있는 함수
+//     useEffect(() => {
+//         if (!socket) return;
+//
+//     socket.onmessage = (event) => {
+//         //console.log("📡 수신된 센서 데이터:", event.data);
+//         const parsedData = JSON.parse(event.data);
+//         setSensorData(parsedData);
+//         localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+//     };
+//
+//     const savedData = localStorage.getItem("sensorData");
+//     if (savedData) {
+//         setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+//     }
+// }, [socket]);
+
+    //mqtt 실행 안됬을 때 데이터를 임시로 넣는 useEffect
+    useEffect(() => {
+        if (socket) {
+            socket.onmessage = (event) => {
+                const parsedData = JSON.parse(event.data);
+                setSensorData(parsedData);
+                localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+            };
+        }
+
+        const savedData = localStorage.getItem("sensorData");
+        if (savedData) {
+            setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+        } else {
+            // 👉 임시 테스트 데이터 (소켓 없을 때 대비)
+            setSensorData({
+                "TEMP": "22.5",
+                "HUM": "40",
+                "PM1.0": "15"
+            });
+        }
+    }, [socket]);
+
     // // 실외 온습도 & 미세먼지 상태
     const [outdoorTemperature, setOutdoorTemperature] = useState("-");
     const [outdoorHumidity, setOutdoorHumidity] = useState("-");
