@@ -28,6 +28,8 @@ public class SensorWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         sessions.add(session);
+        System.out.println("✅ Sensor WebSocket 연결 성공: " + session.getId());
+        System.out.println("📡 현재 연결 수: " + sessions.size());
     }
 
     @Override
@@ -55,6 +57,7 @@ public class SensorWebSocketHandler extends TextWebSocketHandler {
                     //sensorController.updateSensorData(sensorData);
 
                     // 클라이언트에게 전송
+                    System.out.println("📡 WebSocket에 메시지 브로드캐스트: " + objectMapper.writeValueAsString(sensorData));
                     session.sendMessage(new TextMessage(objectMapper.writeValueAsString(sensorData)));
                 } catch (Exception e) {
                     e.printStackTrace();
