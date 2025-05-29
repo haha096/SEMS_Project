@@ -26,6 +26,10 @@ public class SensorEntity {
         //* 초(second)와 나노초(nanosecond)는 제외하고 '시:분'까지만 저장되도록 처리한다.
     }
 
+    public double getPm25() {
+        return this.pm2_5;
+    }
+
 
     private double current;
     private double temp;

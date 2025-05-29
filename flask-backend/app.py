@@ -34,6 +34,8 @@ def get_filtered_data(start, end, column):
         db='springdb',
         charset='utf8mb4'
     )
+    print("🔥 실제 접속된 DB:", conn.get_server_info())
+
     cursor = conn.cursor()
     query = f"""
         SELECT timestamp, {column}
@@ -77,12 +79,19 @@ def chart():
 
     print(f"[DEBUG] chart: {start} ~ {end}, type={sensor_type}")
 
+
+
     data = get_filtered_data(start, end, column)
     if not data:
         return "No data found", 404
 
     x = [row[0] for row in data]
     y = [row[1] for row in data]
+
+    print(f"[DEBUG] chart: {start} ~ {end}, type={sensor_type}")
+    print("📊 조회 결과 개수:", len(data))
+    if data:
+        print("📊 마지막 데이터 시각:", data[-1][0])
 
     fig, ax = plt.subplots()
     ax.plot(x, y, marker='o')
@@ -129,6 +138,8 @@ def table():
         for row in data
     ]
     return jsonify(result)
+
+
 
 
 if __name__ == '__main__':
