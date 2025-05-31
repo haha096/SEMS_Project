@@ -26,6 +26,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 if (isAdmin) {
                     client.subscribe('/topic/messages/admin', (msg) => {
                         const message = JSON.parse(msg.body);
+                        console.log('[AppRouter] 관리자가 메시지를 수신했습니다:', message);
                         setHasNewMessage(true);
                     });
                 } else {

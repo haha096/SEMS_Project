@@ -15,7 +15,7 @@ function Main({ isLoggedIn, userNickname, message }) {
                 <div className="container3">
                     <div id="indoor" className="custom-box">실내상황</div>
                     <div className="indoor_content">
-                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon"/>
+                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon" alt={}/>
                         <div className="info-text">
                             <p>현재 실내 온도 : 23도</p>
                             <p>현재 실내 습도 : 43%</p>
@@ -29,7 +29,7 @@ function Main({ isLoggedIn, userNickname, message }) {
                 <div className="container3" id="outdoor_container">
                     <div id="outdoor" className="custom-box">실외상황</div>
                     <div className="outdoor_content">
-                        <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon"/>
+                        <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon" alt={}/>
                         <div className="info-text">
                             <p>현재 실외 온도 : 23도</p>
                             <p>현재 실외 습도 : 43%</p>
