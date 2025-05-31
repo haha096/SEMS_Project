@@ -27,7 +27,7 @@ function Login({ handleLogin }) {
 
             if (response.ok) {
                 if (result.nickname) {
-                    handleLogin(result.nickname); // 닉네임 전달
+                    handleLogin(result.nickname, result.isAdmin); // 닉네임 전달
                     navigate("/");
                 } else {
                     setErrorMessage("로그인 성공했지만 닉네임이 없습니다.");
