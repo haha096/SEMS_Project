@@ -2,7 +2,6 @@ package Not_Found.model.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Getter
