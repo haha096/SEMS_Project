@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import AppRouter from "./AppRouter";
 
 function App() {
+    const [socket, setSocket] = useState(null);
     const [message, setMessage] = useState("");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userNickname, setUserNickname] = useState("");
