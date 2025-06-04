@@ -78,7 +78,6 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 
     }, [socket]);
 
-
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
         fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
@@ -123,7 +122,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                 <div className="container3">
                     <div id="indoor" className="custom-box">실내상황</div>
                     <div className="indoor_content">
-                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon" alt="indoor_image"/>
+                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon"/>
                         <div className="info-text">
                             <p>현재 실내 온도 : {sensorData["TEMP"]}도</p>
                             <p>현재 실내 습도 : {sensorData["HUM"]}%</p>
@@ -137,11 +136,11 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                 <div className="container3" id="outdoor_container">
                     <div id="outdoor" className="custom-box">실외상황</div>
                     <div className="outdoor_content">
-                        <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon" alt="outdoor_image"/>
+                        <img src={outdoorImage} name="outdoor_image" className="icon" />
                         <div className="info-text">
-                            <p>현재 실외 온도 : 23도</p>
-                            <p>현재 실외 습도 : 43%</p>
-                            <p>현재 실외 미세먼지 : 24ug</p>
+                            <p>현재 실외 온도 : {outdoorTemperature}도</p>
+                            <p>현재 실외 습도 : {outdoorHumidity}%</p>
+                            <p>현재 실외 미세먼지 : {outdoorPm10}ug</p>
                         </div>
                     </div> {/* outdoor_content */}
                 </div> {/* container3 */}
@@ -208,6 +207,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             <div className="empty"></div>
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
+
                 <p>Spring에서 받은 메시지: {message}</p>
                 <p>센서 데이터: {JSON.stringify(sensorData)}</p>
             </div>

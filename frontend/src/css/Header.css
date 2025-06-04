@@ -47,12 +47,3 @@
     background-color: #ddd;
 }
 
-.user-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-info {
-    font-weight: bold;
-}
