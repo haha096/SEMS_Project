@@ -143,11 +143,22 @@ IoT 기반 실내 공기질 모니터링 및 제어 시스템의 웹서버 저�
 <br>
 
 ## 프로젝트 실행 방법
+### 1. Spring boot 서버 실행
+1. clone 후 gridle 연결
+2. MySQL DB확인 (DB이름, 아이디, 패스워드)
 
-1. 만약 gridle연결 안되어있으면 gridle연결해야합니다
-2. cd frontend
-3. npm install
-4. npm start
+### 2. Flask 서버 실행
+1. pip install flask_cors (cmd에서 초기 설치)
+2. pip install matplotlib (cmd에서 초기 설치)
+3. pip install flask (cmd에서 초기 설치)
+4. pip install pymysql (cmd에서 초기 설치)
+5. cd flask-backend (flask 파일로 이동)
+6. python app.py (flask 서버 실행)
+
+### 3. React 실행
+1. cd frontend
+2. npm install
+3. npm start
 
 <br>
 
