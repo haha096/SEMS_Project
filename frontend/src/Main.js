@@ -1,9 +1,122 @@
 import { useNavigate } from "react-router-dom";
 import "./css/Main.css";
+import React, { useEffect, useState } from 'react';
 
-function Main({ isLoggedIn, userNickname, message }) {
+import OutdoorBlue from './assets/outdoor_img/outdoor_blue.png';
+import OutdoorGreen from './assets/outdoor_img/outdoor_green.png';
+import OutdoorYellow from './assets/outdoor_img/outdoor_yellow.png';
+import OutdoorOrange from './assets/outdoor_img/outdoor_orange.PNG';
+import OutdoorRed from './assets/outdoor_img/outdoor_red.png';
+
+function Main({ isLoggedIn, userNickname, message, socket }) {
 
     const navigate = useNavigate();
+    const [sensorData, setSensorData] = useState(null);
+
+    // 실외 온습도 & 미세먼지 상태
+    const [outdoorTemperature, setOutdoorTemperature] = useState("-");
+    const [outdoorHumidity, setOutdoorHumidity] = useState("-");
+    const [outdoorPm10, setOutdoorPm10] = useState("-");
+
+
+    const selectOutdoorImageByTemperature = (temp) => {
+        if (temp >= 30) return OutdoorRed;
+        if (temp >= 26) return OutdoorOrange;
+        if (temp >= 22) return OutdoorYellow;
+        if (temp >= 19) return OutdoorGreen;
+        return OutdoorBlue;
+    }
+
+    //실제 데이터 가져와서 메인페이지에 넣을 수 있는 함수
+//     useEffect(() => {
+//         if (!socket) return;
+//
+//     socket.onmessage = (event) => {
+//         //console.log("📡 수신된 센서 데이터:", event.data);
+//         const parsedData = JSON.parse(event.data);
+//         setSensorData(parsedData);
+//         localStorage.setItem("sensorData", JSON.stringify(parsedData));  // 👉 저장
+//     };
+//
+//     const savedData = localStorage.getItem("sensorData");
+//     if (savedData) {
+//         setSensorData(JSON.parse(savedData));  // 👉 새로고침 시 복원
+//     }
+// }, [socket]);
+
+    //mqtt 실행 안됬을 때 데이터를 임시로 넣는 useEffect
+    useEffect(() => {
+        if (socket) {
+            socket.onmessage = (event) => {
+                const parsedData = JSON.parse(event.data);
+                setSensorData(parsedData);
+                localStorage.setItem("sensorData", JSON.stringify(parsedData));
+            };
+        }
+
+        const savedData = localStorage.getItem("sensorData");
+        if (savedData) {
+            setSensorData(JSON.parse(savedData));
+        } else {
+
+            setSensorData({
+                "TEMP": "22.5",
+                "HUM": "40",
+                "PM1.0": "15"
+            });
+        }
+    }, [socket]);
+
+
+
+    useEffect(() => {
+        if (!socket) return;
+
+    socket.onmessage = (event) => {
+        //console.log("📡 수신된 센서 데이터:", event.data);
+        const parsedData = JSON.parse(event.data);
+        setSensorData(parsedData);
+    };
+
+}, [socket]);
+
+
+    //실외 온습도, 미세먼지 함수
+    useEffect(() => {
+        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+            .then(res => res.text())
+            .then(data => {
+                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
+                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
+                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
+                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
+            })
+            .catch(() => {
+                setOutdoorTemperature("-");
+                setOutdoorHumidity("-");
+            });
+
+        fetch("http://localhost:8080/api/dust")
+            .then(res => res.json())
+            .then(data => {
+                setOutdoorPm10(data.pm10Value || "-");
+            })
+            .catch(() => {
+                setOutdoorPm10("-");
+            });
+    }, []);
+
+
+
+    // 센서 데이터가 없을 경우 표시할 기본 메시지
+    if (!sensorData) {
+        return <div>Loading...</div>;
+    }
+
+    //실외데이터에 맞게 바꾼 이미지
+    const outdoorTempValue = parseFloat(outdoorTemperature);
+    const outdoorImage = selectOutdoorImageByTemperature(outdoorTempValue);
+
 
     return (
         <div className="container1">
@@ -15,11 +128,11 @@ function Main({ isLoggedIn, userNickname, message }) {
                 <div className="container3">
                     <div id="indoor" className="custom-box">실내상황</div>
                     <div className="indoor_content">
-                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon" alt="indoor_image"/>
+                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon"/>
                         <div className="info-text">
-                            <p>현재 실내 온도 : 23도</p>
-                            <p>현재 실내 습도 : 43%</p>
-                            <p>현재 실내 미세먼지 : 24ug</p>
+                            <p>현재 실내 온도 : {sensorData["TEMP"]}도</p>
+                            <p>현재 실내 습도 : {sensorData["HUM"]}%</p>
+                            <p>현재 실내 미세먼지 : {sensorData["PM1.0"]}ug</p>
                         </div>
                     </div> {/* indoor_content */}
                 </div> {/* container3 */}
@@ -29,11 +142,11 @@ function Main({ isLoggedIn, userNickname, message }) {
                 <div className="container3" id="outdoor_container">
                     <div id="outdoor" className="custom-box">실외상황</div>
                     <div className="outdoor_content">
-                        <img src="/images/outdoor_orange.PNG" name="indoor_image" className="icon" alt="outdoor_image"/>
+                        <img src={outdoorImage} name="outdoor_image" className="icon" />
                         <div className="info-text">
-                            <p>현재 실외 온도 : 23도</p>
-                            <p>현재 실외 습도 : 43%</p>
-                            <p>현재 실외 미세먼지 : 24ug</p>
+                            <p>현재 실외 온도 : {outdoorTemperature}도</p>
+                            <p>현재 실외 습도 : {outdoorHumidity}%</p>
+                            <p>현재 실외 미세먼지 : {outdoorPm10}ug</p>
                         </div>
                     </div> {/* outdoor_content */}
                 </div> {/* container3 */}
@@ -100,7 +213,10 @@ function Main({ isLoggedIn, userNickname, message }) {
             <div className="empty"></div>
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
+
                 <p>Spring에서 받은 메시지: {message}</p>
+                <p>센서 데이터: {JSON.stringify(sensorData)}</p>
+
             </div>
 
         </div> /* container1 */
