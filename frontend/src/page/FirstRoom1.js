@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import { Link } from "react-router-dom";
 import '../css/page_css/Floor/FirstRoom1.css';
 
@@ -36,6 +36,23 @@ function FirstRoom1(){
         humidity: "hum",
         dust: "pm2_5"
     };
+
+    //처음에 들어가면 바로 데이터 시각화 그래프가 보일 수 있도록
+    // 오늘 날짜 기본 설정
+    useEffect(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        setStartDate(today);
+        setEndDate(today);
+    }, []);
+
+// 날짜가 설정되면 자동 조회 실행
+    useEffect(() => {
+        if (startDate && endDate) {
+            handleSearch();
+        }
+    }, [startDate, endDate, type, viewMode]);
+
+
 
     return(
         <div className="first-room-wrapper">

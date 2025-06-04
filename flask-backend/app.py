@@ -1,4 +1,6 @@
 import matplotlib
+from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
+
 matplotlib.use('Agg')
 
 from flask import Flask, send_file, request, jsonify
@@ -34,10 +36,12 @@ def get_filtered_data(start, end, column):
         db='springdb',
         charset='utf8mb4'
     )
+    print("🔥 실제 접속된 DB:", conn.get_server_info())
+
     cursor = conn.cursor()
     query = f"""
         SELECT timestamp, {column}
-        FROM sensor_data
+        FROM environment_data
         WHERE timestamp BETWEEN %s AND %s
         ORDER BY timestamp
     """
@@ -49,7 +53,6 @@ def get_filtered_data(start, end, column):
 
 @app.route('/chart')
 def chart():
-
     import matplotlib.dates as mdates
 
     sensor_type = request.args.get('type')
@@ -57,16 +60,15 @@ def chart():
     end = request.args.get('end')
 
     type_map = {
-        'temperature': 'temp',
-        'humidity': 'hum',
-        'dust': 'pm2_5'
+        'temperature': 'temperature',
+        'humidity': 'humidity',
+        'dust': 'dust'
     }
 
     column = type_map.get(sensor_type)
     if not column:
         return "Invalid type", 400
 
-    # ✅ start/end 없으면 최근 12시간으로 fallback
     if not start or not end:
         now = datetime.now()
         start = (now - timedelta(hours=12)).strftime('%Y-%m-%d %H:%M:%S')
@@ -75,8 +77,6 @@ def chart():
         start = f"{start} 00:00:00"
         end = f"{end} 23:59:59"
 
-    print(f"[DEBUG] chart: {start} ~ {end}, type={sensor_type}")
-
     data = get_filtered_data(start, end, column)
     if not data:
         return "No data found", 404
@@ -84,12 +84,20 @@ def chart():
     x = [row[0] for row in data]
     y = [row[1] for row in data]
 
-    fig, ax = plt.subplots()
-    ax.plot(x, y, marker='o')
+    width = max(10, len(x) * 0.4)  # 데이터 하나당 0.4인치, 최소 10
+    fig, ax = plt.subplots(figsize=(width, 5))
+
+
+    ax.plot(x, y, marker='o', linestyle='-')
     ax.set_title(f"{sensor_type} 데이터 그래프")
     ax.set_xlabel("시간")
     ax.set_ylabel(column)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+
+    locator = AutoDateLocator()
+    formatter = ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+
     fig.autofmt_xdate()
 
     buf = io.BytesIO()
@@ -129,6 +137,8 @@ def table():
         for row in data
     ]
     return jsonify(result)
+
+
 
 
 if __name__ == '__main__':
