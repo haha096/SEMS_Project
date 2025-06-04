@@ -1,24 +1,5 @@
 // src/Login/FindPassword.js
-import React from "react";
-
 function FindPassword() {
-    return(
-        <div className="find-container">
-            <h2>비밀번호 찾기</h2>
-            <form className="find-content">
-                <div className="find-inputform">
-                    <div className="find-input">
-                        <label>이메일</label>
-                        <input type="text"/>
-                    </div>
-
-                </div>
-
-                <button type="submit" className="find-button">이메일로 전송</button>
-            </form>
-
-
-        </div>
-    );
+    return <div><h2>비밀번호 찾기</h2></div>;
 }
 export default FindPassword;
