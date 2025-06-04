@@ -67,19 +67,16 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
         }
     }, [socket]);
 
-
-
     useEffect(() => {
         if (!socket) return;
 
-    socket.onmessage = (event) => {
-        //console.log("📡 수신된 센서 데이터:", event.data);
-        const parsedData = JSON.parse(event.data);
-        setSensorData(parsedData);
-    };
+        socket.onmessage = (event) => {
+            //console.log("📡 수신된 센서 데이터:", event.data);
+            const parsedData = JSON.parse(event.data);
+            setSensorData(parsedData);
+        };
 
-}, [socket]);
-
+    }, [socket]);
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
@@ -106,8 +103,6 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             });
     }, []);
 
-
-
     // 센서 데이터가 없을 경우 표시할 기본 메시지
     if (!sensorData) {
         return <div>Loading...</div>;
@@ -116,7 +111,6 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     //실외데이터에 맞게 바꾼 이미지
     const outdoorTempValue = parseFloat(outdoorTemperature);
     const outdoorImage = selectOutdoorImageByTemperature(outdoorTempValue);
-
 
     return (
         <div className="container1">
@@ -216,7 +210,6 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 
                 <p>Spring에서 받은 메시지: {message}</p>
                 <p>센서 데이터: {JSON.stringify(sensorData)}</p>
-
             </div>
 
         </div> /* container1 */
