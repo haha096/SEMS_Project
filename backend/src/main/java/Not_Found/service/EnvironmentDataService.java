@@ -1,20 +1,83 @@
 package Not_Found.service;
 
 import Not_Found.model.dto.UsageTimeDTO;
+import Not_Found.model.entity.EnvironmentEntity;
+import Not_Found.model.entity.SensorEntity;
+import Not_Found.repository.EnvironmentDataRepository;
 import Not_Found.repository.SensorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EnvironmentDataService {
 
     private final SensorRepository sensorRepository;
+    private final EnvironmentDataRepository environmentDataRepository;
 
     @Autowired
-    public EnvironmentDataService(SensorRepository sensorRepository) {
+    public EnvironmentDataService(SensorRepository sensorRepository,EnvironmentDataRepository environmentDataRepository) {
         this.sensorRepository = sensorRepository;
+        this.environmentDataRepository = environmentDataRepository;
+    }
+
+    // 1. 특정 시각 (예: 매일 정오)의 센서 데이터를 저장
+    public void saveNoonData() {
+        LocalDateTime targetTime = LocalDateTime.now()
+                .withHour(12).withMinute(0).withSecond(0).withNano(0);
+
+        LocalDateTime start = targetTime.minusSeconds(3);
+        LocalDateTime end = targetTime.plusSeconds(3);
+
+        sensorRepository.findTopByTimestampBetween(start, end).ifPresent(sensor -> {
+            EnvironmentEntity data = new EnvironmentEntity();
+            data.setSensorDataId(sensor.getId());
+            data.setTemperature((float) sensor.getTemp());
+            data.setHumidity((float) sensor.getHum());
+            data.setDust((float) sensor.getPm2_5());
+            data.setTimestamp(sensor.getTimestamp());
+
+            environmentDataRepository.save(data);
+            System.out.println("✅ 센서 데이터를 환경 테이블에 저장 완료!");
+
+
+            System.out.println("⏰ 센서 조회 시도: " + start + " ~ " + end);
+
+            Optional<SensorEntity> opt = sensorRepository.findTopByTimestampBetween(start, end);
+            if (opt.isEmpty()) {
+                System.out.println("❌ 해당 시간에 센서 데이터 없음!");
+            }
+        });
+    }
+
+    // 2. 하루 평균 센서 데이터를 저장
+    public void saveDailyAverage() {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        System.out.println("✅ [스케줄러] 평균 저장 시도됨");
+
+        List<SensorEntity> sensors = sensorRepository.findByTimestampBetween(start, end);
+        System.out.println("조회된 센서 수: " + sensors.size());
+        if (sensors.isEmpty()){
+            System.out.println("⚠ 센서 데이터 없음. 저장 안함");
+            return;
+        }
+
+        double avgTemp = sensors.stream().mapToDouble(SensorEntity::getTemp).average().orElse(0.0);
+        double avgHum = sensors.stream().mapToDouble(SensorEntity::getHum).average().orElse(0.0);
+        double avgDust = sensors.stream().mapToDouble(SensorEntity::getPm2_5).average().orElse(0.0);
+
+        EnvironmentEntity data = new EnvironmentEntity();
+        data.setAvgTemperature((float) avgTemp);
+        data.setAvgHumidity((float) avgHum);
+        data.setAvgDust((float) avgDust);
+        data.setTimestamp(LocalDateTime.now());
+
+        environmentDataRepository.save(data);
     }
 
     public UsageTimeDTO getUsageTime() {
