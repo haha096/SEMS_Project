@@ -1,6 +1,7 @@
 package Not_Found.service;
 
 import Not_Found.model.dto.SensorData;
+import Not_Found.model.dto.UsageTimeDTO;
 import Not_Found.model.entity.SensorEntity;
 import Not_Found.repository.SensorRepository;
 
@@ -89,5 +90,6 @@ public class SensorService {
             return dto;
         }).collect(Collectors.toList());  // 데이터 없으면 빈 List<SensorData>로 변환
     }
+
 
 }
