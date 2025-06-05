@@ -12,5 +12,4 @@ public class EnvironmentDataDTO {
     private float temperature;
     private float humidity;
     private float dust;
-
 }
