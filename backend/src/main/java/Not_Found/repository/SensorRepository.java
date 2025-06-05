@@ -2,6 +2,7 @@ package Not_Found.repository;
 
 import Not_Found.model.entity.SensorEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,4 +20,14 @@ public interface SensorRepository extends JpaRepository<SensorEntity, Long> {
     List<SensorEntity> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
     Optional<SensorEntity> findTopByOrderByTimestampDesc();
     Optional<SensorEntity> findTopByTimestampBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query(value = """
+    SELECT 
+        TIMESTAMPDIFF(SECOND, MIN(timestamp), MAX(timestamp)) AS seconds_diff,
+        TIMESTAMPDIFF(MINUTE, MIN(timestamp), MAX(timestamp)) AS minutes_diff,
+        TIMESTAMPDIFF(HOUR, MIN(timestamp), MAX(timestamp)) AS hours_diff
+    FROM sensor_data
+    WHERE current <> 0
+    """, nativeQuery = true)
+    List<Object[]> getTimeDiff();
 }
