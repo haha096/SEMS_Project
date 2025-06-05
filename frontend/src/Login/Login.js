@@ -12,7 +12,7 @@ function Login({ handleLogin }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage("");
-        // 서버에 로그인 요청
+
         try {
             const response = await fetch("http://localhost:8080/api/user/login", {
                 method: "POST",
@@ -23,11 +23,19 @@ function Login({ handleLogin }) {
                 credentials: "include"
             });
 
-            const result = await response.json(); // JSON 응답 받기
+            const result = await response.json();
 
             if (response.ok) {
                 if (result.nickname) {
-                    handleLogin(result.nickname); // 닉네임 전달
+                    // 로그인 처리
+                    handleLogin(result.nickname, result.isAdmin);
+
+                    // localStorage에 저장
+                    localStorage.setItem("userInfo", JSON.stringify({
+                        nickname: result.nickname,
+                        isAdmin: result.isAdmin
+                    }));
+                  
                     navigate("/");
                 } else {
                     setErrorMessage("로그인 성공했지만 닉네임이 없습니다.");
