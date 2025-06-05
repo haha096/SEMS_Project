@@ -38,3 +38,30 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
         registry.addHandler(sensorWebSocketHandler, "/ws/sensor")
                 .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
     }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic", "/queue");
+        config.setApplicationDestinationPrefixes("/app");
+        config.setUserDestinationPrefix("/user");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setHandshakeHandler(new DefaultHandshakeHandler() {
+                    @Override
+                    protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+                        String userId = null;
+                        if (request instanceof ServletServerHttpRequest servletRequest) {
+                            userId = servletRequest.getServletRequest().getParameter("userId");
+                        }
+                        if (userId == null) userId = "anonymous";
+                        String finalUserId = userId;
+                        return () -> finalUserId;
+                    }
+                })
+                .setAllowedOrigins("http://localhost:3000")
+                .withSockJS();
+    }
+}
