@@ -29,10 +29,10 @@ public class SensorDataSaveService {
             // timestamp는 @PrePersist로 자동 설정됨
 
             sensorRepository.save(sensor); // ✅ DB에 저장
-            System.out.println("✅ 센서 데이터 저장 완료!");
+            System.out.println("센서 데이터 저장 완료!");
 
         } catch (Exception e) {
-            System.err.println("❌ 센서 저장 실패: " + e.getMessage());
+            System.err.println("센서 저장 실패: " + e.getMessage());
             e.printStackTrace();
         }
     }
