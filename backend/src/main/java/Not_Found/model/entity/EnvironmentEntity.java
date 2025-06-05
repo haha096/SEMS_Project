@@ -41,3 +41,4 @@ public class EnvironmentEntity {
     private Float avgDust;
     // 생성자, Getter, Setter 또는 @Getter @Setter 사용해도 됨
 }
+

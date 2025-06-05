@@ -27,6 +27,10 @@ public class SensorEntity {
         // 나노초만 0으로 만들고 초는 현재 시간 그대로 유지
     }
 
+    public double getPm25() {
+        return this.pm2_5;
+    }
+
 
     private double current;
     private double volt;
