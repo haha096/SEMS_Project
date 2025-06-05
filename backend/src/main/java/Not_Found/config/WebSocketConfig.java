@@ -38,3 +38,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
         registry.addHandler(sensorWebSocketHandler, "/ws/sensor")
                 .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
     }
+}

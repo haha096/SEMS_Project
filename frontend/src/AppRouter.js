@@ -6,8 +6,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FindId from "./Login/FindId";
 import FindPassword from "./Login/FindPassword";
-import ChatPage from "./chat/ChatPage";
-import Chat from "./chat/Chat";
+// import ChatPage from "./chat/ChatPage";
+// import Chat from "./chat/Chat";
 import SensorData from "./pages/SensorData";
 import MonitorPage from './pages/MonitorPage';
 import DataAnalysis from "./page/DataAnalysis";
@@ -18,8 +18,8 @@ import MyPage from "./mypage/MyPage";
 import UpdateId from "./mypage/UpdateId";
 import UpdatePwd from "./mypage/UpdatePwd";
 import {useEffect, useRef, useState} from "react";
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+// import SockJS from 'sockjs-client';
+// import { Client } from '@stomp/stompjs';
 
 function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, handleLogout, socket, hasNewMessage, setHasNewMessage }) {
     const clientRef = useRef(null);
@@ -40,7 +40,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 <Route path="/find-id" element={<FindId />} />
                 <Route path="/find-password" element={<FindPassword />} />
                 <Route path="/monitor" element={<MonitorPage />} />
-                <Route path="/chatt" element={<Chat />} />
+                {/*<Route path="/chatt" element={<Chat />} />*/}
                 <Route path="/sensor" element={<SensorData />} />
                 <Route path="/dataanalysis" element={<DataAnalysis />} />
                 <Route path="/monitoring_indoor" element={<Monitoring_indoor />} />
@@ -49,18 +49,18 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 <Route path="/mypage" element={<MyPage />} />
                 <Route path="/updateid" element={<UpdateId />} />
                 <Route path="/updatepwd" element={<UpdatePwd />} />
-                <Route
-                    path="/chat"
-                    element={
-                        <ChatPage
-                            isLoggedIn={isLoggedIn}
-                            isAdmin={isAdmin}
-                            userNickname={userNickname}
-                            onEnterChatPage={() => setHasNewMessage(false)}
-                            setHasNewMessage={setHasNewMessage}
-                        />
-                    }
-                />
+                {/*<Route*/}
+                {/*    path="/chat"*/}
+                {/*    element={*/}
+                {/*        <ChatPage*/}
+                {/*            isLoggedIn={isLoggedIn}*/}
+                {/*            isAdmin={isAdmin}*/}
+                {/*            userNickname={userNickname}*/}
+                {/*            onEnterChatPage={() => setHasNewMessage(false)}*/}
+                {/*            setHasNewMessage={setHasNewMessage}*/}
+                {/*        />*/}
+                {/*    }*/}
+                {/*/>*/}
             </Routes>
 
             <Footer />
