@@ -5,6 +5,8 @@ import Not_Found.model.dto.SensorData;
 import Not_Found.model.dto.UsageTimeDTO;
 import Not_Found.service.EnvironmentDataService;
 import Not_Found.service.SensorService;
+
+
 import Not_Found.util.MyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,7 +25,7 @@ public class SensorController {
     private final EnvironmentDataService environmentDataService;
 
     @Autowired
-    public SensorController(SensorService sensorService, EnvironmentDataService environmentDataService) {
+    public SensorController(SensorService sensorService,EnvironmentDataService environmentDataService) {
         this.sensorService = sensorService;
         this.environmentDataService = environmentDataService;
     }

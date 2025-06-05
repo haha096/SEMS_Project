@@ -11,7 +11,25 @@ import OutdoorRed from './assets/outdoor_img/outdoor_red.png';
 function Main({ isLoggedIn, userNickname, message, socket }) {
 
     const navigate = useNavigate();
-    const [sensorData, setSensorData] = useState(null);
+    const [sensorData, setSensorData] = useState({
+                                                   id: 0,
+                                                   timestamp: "-",
+                                                   CURRENT: 0,
+                                                   VOLT: 0,
+                                                   TEMP: 0,
+                                                   HUM: 0,
+                                                   MODE: "-",
+                                                   SPEED: 0,
+                                                   "PM1.0": 0,
+                                                   "PM2.5": 0,
+                                                   PM10: 0,
+                                                   "전력량": 0,
+                                                 });
+    const [lastMonthUsageSeconds, setLastMonthUsageSeconds] = useState("-");
+
+
+
+
 
 
     const selectOutdoorImageByTemperature = (temp) => {
@@ -38,7 +56,18 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 
 }, [socket]);
 
-
+useEffect(() => {
+    fetch("http://localhost:8080/sensor/energy/usage-time")
+        .then(res => res.json())
+        .then(data => {
+            if (data.seconds !== undefined) {
+                setLastMonthUsageSeconds(data.seconds);
+            } else {
+                setLastMonthUsageSeconds("-");
+            }
+        })
+        .catch(() => setLastMonthUsageSeconds("-"));
+}, []);
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
@@ -68,9 +97,9 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 
 
     // 센서 데이터가 없을 경우 표시할 기본 메시지
-    if (!sensorData) {
-        return <div>Loading...</div>;
-    }
+//    if (!sensorData) {
+//        return <div>Loading...</div>;
+//    }
 
     //실외데이터에 맞게 바꾼 이미지
     const outdoorTempValue = parseFloat(outdoorTemperature);
@@ -144,7 +173,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                     <div className="container6">
                         <h2 className="title">지난 달 에너지 총량</h2>
                         <img src="/images/indoor_yellow.PNG" alt="에너지 아이콘" className="energy-icon" />
-                        <p className="energy-text">공기 청정기 쓴 에너지<br />230 시간</p>
+                        <p className="energy-text">공기 청정기 쓴 에너지<br />{lastMonthUsageSeconds}</p>
                     </div> {/* container6 */}
 
 
@@ -156,7 +185,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                     <div className="container6">
                         <h2 className="title">지난 달 에너지 총량</h2>
                         <img src="/images/indoor_blue.PNG" alt="에너지 아이콘" className="energy-icon" />
-                        <p className="energy-text">공기 청정기 쓴 에너지<br />120 시간</p>
+                        <p className="energy-text">공기 청정기 전류<br />{sensorData.CURRENT}</p>
                     </div> {/* container6 */}
 
 
@@ -172,8 +201,8 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
             <div className="empty"></div>
             {/* Spring 메시지 표시 */}
             <div style={{ textAlign: "center", margin: "20px 0", fontSize: "20px", fontWeight: "bold" }}>
-                 <p>Spring에서 받은 메시지: {message}</p>
-                 <p>센서 데이터: {JSON.stringify(sensorData)}</p>
+                {/* <p>Spring에서 받은 메시지: {message}</p> */}
+                {/* <p>센서 데이터: {JSON.stringify(sensorData)}</p> */}
             </div>
 
         </div> /* container1 */
