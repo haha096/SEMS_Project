@@ -11,7 +11,6 @@ function FindId() {
                         <label>이메일</label>
                         <input type="text"/>
                     </div>
-
                 </div>
 
                 <button type="submit" className="find-button">이메일로 전송</button>

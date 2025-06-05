@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
 import org.springframework.http.server.ServerHttpRequest;
@@ -38,6 +39,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
                 .setAllowedOrigins("*"); // ✨ 새로 추가하는 센서용 WebSocket
     }
 
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue");
@@ -63,4 +65,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
                 .setAllowedOrigins("http://localhost:3000")
                 .withSockJS();
     }
+
 }
+
+
+

@@ -38,7 +38,7 @@ public class MqttSubscriber {
                 sensorDataService.handleIncomingSensorData(payload);
             });
 
-            System.out.println("✅ MQTT 구독 시작됨 (sensor/topic)");
+            System.out.println("MQTT 구독 시작됨 (sensor/topic)");
         } catch (Exception e) {
             e.printStackTrace();
         }
