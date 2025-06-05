@@ -15,6 +15,9 @@ public class SensorData {
     @JsonProperty("CURRENT")
     private double current;
 
+    @JsonProperty("VOLT")
+    private double volt;
+
     @JsonProperty("TEMP")
     private double temp;
 

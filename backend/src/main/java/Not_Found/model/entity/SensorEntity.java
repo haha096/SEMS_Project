@@ -1,5 +1,6 @@
 package Not_Found.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,12 +23,13 @@ public class SensorEntity {
     // 엔티티 생성 시 timestamp 컬럼 생성
     @PrePersist
     public void prePersist() {
-        this.timestamp = LocalDateTime.now().withSecond(0).withNano(0);
-        //* 초(second)와 나노초(nanosecond)는 제외하고 '시:분'까지만 저장되도록 처리한다.
+        this.timestamp = LocalDateTime.now().withNano(0);
+        // 나노초만 0으로 만들고 초는 현재 시간 그대로 유지
     }
 
 
     private double current;
+    private double volt;
     private double temp;
     private double hum;
     private String mode;
@@ -36,4 +38,5 @@ public class SensorEntity {
     private double pm2_5;
     private double pm10;
     private double powerUsage;
+
 }

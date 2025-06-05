@@ -90,4 +90,6 @@ public class SensorService {
         }).collect(Collectors.toList());  // 데이터 없으면 빈 List<SensorData>로 변환
     }
 
+
+
 }
