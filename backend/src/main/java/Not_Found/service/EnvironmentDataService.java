@@ -1,10 +1,11 @@
 package Not_Found.service;
 
+import Not_Found.model.dto.UsageTimeDTO;
 import Not_Found.model.entity.EnvironmentEntity;
 import Not_Found.model.entity.SensorEntity;
 import Not_Found.repository.EnvironmentDataRepository;
 import Not_Found.repository.SensorRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,10 +14,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class EnvironmentDataService {
+
     private final SensorRepository sensorRepository;
     private final EnvironmentDataRepository environmentDataRepository;
+
+    @Autowired
+    public EnvironmentDataService(SensorRepository sensorRepository,EnvironmentDataRepository environmentDataRepository) {
+        this.sensorRepository = sensorRepository;
+        this.environmentDataRepository = environmentDataRepository;
+    }
 
     // 1. 특정 시각 (예: 매일 정오)의 센서 데이터를 저장
     public void saveNoonData() {
@@ -31,7 +38,7 @@ public class EnvironmentDataService {
             data.setSensorDataId(sensor.getId());
             data.setTemperature((float) sensor.getTemp());
             data.setHumidity((float) sensor.getHum());
-            data.setDust((float) sensor.getPm25());
+            data.setDust((float) sensor.getPm2_5());
             data.setTimestamp(sensor.getTimestamp());
 
             environmentDataRepository.save(data);
@@ -62,7 +69,7 @@ public class EnvironmentDataService {
 
         double avgTemp = sensors.stream().mapToDouble(SensorEntity::getTemp).average().orElse(0.0);
         double avgHum = sensors.stream().mapToDouble(SensorEntity::getHum).average().orElse(0.0);
-        double avgDust = sensors.stream().mapToDouble(SensorEntity::getPm25).average().orElse(0.0);
+        double avgDust = sensors.stream().mapToDouble(SensorEntity::getPm2_5).average().orElse(0.0);
 
         EnvironmentEntity data = new EnvironmentEntity();
         data.setAvgTemperature((float) avgTemp);
@@ -71,5 +78,33 @@ public class EnvironmentDataService {
         data.setTimestamp(LocalDateTime.now());
 
         environmentDataRepository.save(data);
+    }
+
+    public UsageTimeDTO getUsageTime() {
+        try {
+            List<Object[]> resultList = sensorRepository.getTimeDiff();
+
+            if (resultList == null || resultList.isEmpty()) {
+                System.err.println("getTimeDiff 결과가 null 이거나 비어있음");
+                return new UsageTimeDTO(0, 0, 0);
+            }
+
+            Object[] result = resultList.get(0); // 첫 번째 결과만 사용
+            if (result.length < 3) {
+                System.err.println("getTimeDiff 결과 배열 크기가 부족함");
+                return new UsageTimeDTO(0, 0, 0);
+            }
+
+            int seconds = ((Number) result[0]).intValue();
+            int minutes = ((Number) result[1]).intValue();
+            int hours = ((Number) result[2]).intValue();
+
+            System.out.println("seconds=" + seconds + ", minutes=" + minutes + ", hours=" + hours);
+
+            return new UsageTimeDTO(seconds, minutes, hours);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new UsageTimeDTO(0, 0, 0);
+        }
     }
 }
