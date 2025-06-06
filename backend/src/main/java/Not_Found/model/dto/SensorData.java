@@ -22,10 +22,10 @@ public class SensorData {
     private double volt;
 
     @JsonProperty("TEMP")
-    private double temp;
+    private double temperature;
 
     @JsonProperty("HUM")
-    private double hum;
+    private double humidity;
 
     @JsonProperty("MODE")
     private String mode;
@@ -34,10 +34,10 @@ public class SensorData {
     private int speed;
 
     @JsonProperty("POWER")
-    private String power;
+    private String powerStatus;
 
     @JsonProperty("PM1")
-    private double pm1_0;
+    private double pm1;
 
     @JsonProperty("PM2_5")
     private double pm2_5;
