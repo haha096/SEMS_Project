@@ -1,0 +1,75 @@
+.device_control-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 95%;
+    height: 150px; /* 높이는 필요에 따라 조절 */
+    border: 2px solid #4285f4; /* 파란색 테두리 */
+    border-radius: 16px; /* 둥근 모서리 */
+    font-size: 18px;
+    color: black;
+    margin: 0 auto; /* 화면 중앙 정렬 */
+
+}
+
+.device_control-container2 {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin: 10px;
+    margin-left:40px;
+    margin-right: 40px;
+    width: 95%;
+}
+
+/* 서브 메뉴 영역 스타일 */
+/* 왼쪽 서브 메뉴바 */
+.menu-container {
+    width: 200px;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: #4285f4;
+    color: white;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 30px;
+
+}
+
+.menu-item {
+    padding: 16px 0;
+    position: relative;
+    cursor: pointer;
+
+}
+
+.submenu {
+    background-color: #083df3;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s ease-in-out;
+    font-size: 17px;
+
+}
+
+.submenu div {
+    padding: 14px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+}
+
+.submenu.show {
+    max-height: 500px;
+
+}
+
+/* 오른쪽 콘텐츠 */
+.content-area {
+    flex-grow: 1;
+    min-width: 600px;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 12px;
+}
