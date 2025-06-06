@@ -22,7 +22,7 @@ public class SensorEntity {
     // 엔티티 생성 시 timestamp 컬럼 생성
     @PrePersist
     public void prePersist() {
-        this.timestamp = LocalDateTime.now().withSecond(0).withNano(0);
+        this.timestamp = LocalDateTime.now().withSecond(0);
         //* 초(second)와 나노초(nanosecond)는 제외하고 '시:분'까지만 저장되도록 처리한다.
     }
 

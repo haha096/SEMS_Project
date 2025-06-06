@@ -30,7 +30,7 @@ public class SensorDataSaveService {
             sensor.setPm10(obj.getDouble("PM10"));
             sensor.setPowerUsage(obj.has("POWERUSAGE") ? obj.getDouble("POWERUSAGE") : 0.0);
             // timestamp는 @PrePersist로 자동 설정됨
-
+            sensor.setTimestamp(LocalDateTime.now().withSecond(0).withNano(0));
             sensorRepository.save(sensor); // ✅ DB에 저장
             System.out.println("✅ 센서 데이터 저장 완료!");
 

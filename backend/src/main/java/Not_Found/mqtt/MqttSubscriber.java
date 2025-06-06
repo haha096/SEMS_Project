@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 public class MqttSubscriber {
 
     // HiveMQ Cloud 주소 (TLS)
-    private final String brokerUrl = "ssl://1f89c669ce6f40a8aa6952820a376a78.s1.eu.hivemq.cloud:8883";
-    private final String clientId = "backend-subscriber";
+//    private final String brokerUrl = "ssl://1f89c669ce6f40a8aa6952820a376a78.s1.eu.hivemq.cloud:8883";
+//    private final String clientId = "backend-subscriber";
+    private final String brokerUrl = "ssl://ab6b68bbf7ec44aca94c43ac4619cd74.s1.eu.hivemq.cloud:8883";
+    private final String clientId = "test1234";
     private final SensorDataSaveService sensorDataService;
 
     @PostConstruct
