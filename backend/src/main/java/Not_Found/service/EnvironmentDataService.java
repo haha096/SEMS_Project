@@ -1,9 +1,11 @@
 package Not_Found.service;
 
+import Not_Found.model.dto.UsageTimeDTO;
 import Not_Found.model.entity.EnvironmentEntity;
 import Not_Found.model.entity.SensorEntity;
 import Not_Found.repository.EnvironmentDataRepository;
 import Not_Found.repository.SensorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +15,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class EnvironmentDataService {
+
     private final SensorRepository sensorRepository;
     private final EnvironmentDataRepository environmentDataRepository;
+
+    @Autowired
+    public EnvironmentDataService(SensorRepository sensorRepository,EnvironmentDataRepository environmentDataRepository) {
+        this.sensorRepository = sensorRepository;
+        this.environmentDataRepository = environmentDataRepository;
+    }
 
     // 1. 특정 시각 (예: 매일 정오)의 센서 데이터를 저장
     public void saveNoonData() {
@@ -82,5 +91,33 @@ public class EnvironmentDataService {
 
         environmentDataRepository.save(data);
         System.out.println("✅ 하루 평균 환경 데이터 저장 완료!");
+    }
+
+    public UsageTimeDTO getUsageTime() {
+        try {
+            List<Object[]> resultList = sensorRepository.getTimeDiff();
+
+            if (resultList == null || resultList.isEmpty()) {
+                System.err.println("getTimeDiff 결과가 null 이거나 비어있음");
+                return new UsageTimeDTO(0, 0, 0);
+            }
+
+            Object[] result = resultList.get(0); // 첫 번째 결과만 사용
+            if (result.length < 3) {
+                System.err.println("getTimeDiff 결과 배열 크기가 부족함");
+                return new UsageTimeDTO(0, 0, 0);
+            }
+
+            int seconds = ((Number) result[0]).intValue();
+            int minutes = ((Number) result[1]).intValue();
+            int hours = ((Number) result[2]).intValue();
+
+            System.out.println("seconds=" + seconds + ", minutes=" + minutes + ", hours=" + hours);
+
+            return new UsageTimeDTO(seconds, minutes, hours);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new UsageTimeDTO(0, 0, 0);
+        }
     }
 }

@@ -1,4 +1,3 @@
-// src/Login/FindPassword.js
 import React from "react";
 
 function FindPassword() {

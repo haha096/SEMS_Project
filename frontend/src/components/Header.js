@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Header.css';
 
-function Header({ isLoggedIn, handleLogout }) {
+function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
     const navigate = useNavigate();
 
     const handleMyPageClick = () => {
@@ -12,8 +12,7 @@ function Header({ isLoggedIn, handleLogout }) {
             alert('로그인 후 이용해 주세요.'); // 아니면 경고
         }
     };
-
-
+    console.log("🔍 Header 렌더링 - hasNewMessage:", hasNewMessage);
 
     return (
         <header className="header">
@@ -28,6 +27,11 @@ function Header({ isLoggedIn, handleLogout }) {
                 <button onClick={handleMyPageClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
                     내정보
                 </button>
+                <Link to="/chat" style={{ textDecoration: 'none' }}>
+                    실시간 문의
+                    {hasNewMessage && <span style={{ color: 'red', fontSize: '18px', marginLeft: '5px' }}>N</span>}
+                </Link>
+
             </nav>
 
             {isLoggedIn ? (
@@ -37,7 +41,6 @@ function Header({ isLoggedIn, handleLogout }) {
                     <button className="login-btn">LOGIN</button>
                 </Link>
             )}
-
         </header>
     );
 }

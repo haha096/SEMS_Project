@@ -46,3 +46,4 @@ public class EnvironmentEntity {
     @Column(name = "avg_dust")
     private Double avgDust;
 }
+
