@@ -88,6 +88,7 @@ def chart():
         plt.close(fig)
         buf.seek(0)
         return send_file(buf, mimetype='image/png')
+    data = data[-24:]
 
     x = [row[0] for row in data]
     y = [row[1] for row in data]
