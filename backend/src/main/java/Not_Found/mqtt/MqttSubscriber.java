@@ -35,7 +35,7 @@ public class MqttSubscriber {
 
 
                 //센서값이 잘 DB에 안 와서 추가한 DB저장용
-                //sensorDataService.handleIncomingSensorData(payload);
+                sensorDataService.handleIncomingSensorData(payload);
             });
 
             System.out.println("✅ MQTT 구독 시작됨 (sensordata/room1)");

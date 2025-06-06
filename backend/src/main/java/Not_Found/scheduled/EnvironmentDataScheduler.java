@@ -52,4 +52,11 @@ public class EnvironmentDataScheduler {
             System.out.println("[환경데이터] 저장 성공: " + sensor.getTimestamp());
         });
     }
+
+    @Scheduled(cron = "5 * * * * *") // 매 분 5초마다 실행
+    public void applyMinuteAverageUpdate() {
+        LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1).withSecond(0).withNano(0);
+        environmentDataService.updateMinuteAverages(oneMinuteAgo);
+    }
+
 }
