@@ -1,15 +1,30 @@
 package Not_Found.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class EnvironmentDataDTO {
+
+    /** 측정 시각 */
+    @JsonProperty("timestamp")
     private LocalDateTime timestamp;
-    private float temperature;
-    private float humidity;
-    private float dust;
+
+    /** 실시간 온도 */
+    @JsonProperty("temperature")
+    private Double temperature;
+
+    /** 실시간 습도 */
+    @JsonProperty("humidity")
+    private Double humidity;
+
+    /** 실시간 미세먼지(PM2.5) */
+    @JsonProperty("dust")
+    private Double dust;
 }

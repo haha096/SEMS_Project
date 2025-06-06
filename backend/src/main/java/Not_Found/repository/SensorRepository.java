@@ -19,4 +19,6 @@ public interface SensorRepository extends JpaRepository<SensorEntity, Long> {
     List<SensorEntity> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
     Optional<SensorEntity> findTopByOrderByTimestampDesc();
     Optional<SensorEntity> findTopByTimestampBetween(LocalDateTime start, LocalDateTime end);
+    // 예: room1, room2 등 방 이름을 기준으로 최신 데이터 가져오기
+    Optional<SensorEntity> findFirstByRoomOrderByTimestampDesc(String room);
 }

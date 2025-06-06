@@ -12,14 +12,29 @@ public class SensorData {
     @JsonProperty("timestamp")
     private String timestamp;
 
+    @JsonProperty("room")
+    private String room;
+
+    @JsonProperty("PM1")
+    private double pm1;
+
+    @JsonProperty("PM2_5")
+    private double pm2_5;
+
+    @JsonProperty("PM10")
+    private double pm10;
+
     @JsonProperty("CURRENT")
     private double current;
 
+    @JsonProperty("VOLT")
+    private double volt;
+
     @JsonProperty("TEMP")
-    private double temp;
+    private double temperature;
 
     @JsonProperty("HUM")
-    private double hum;
+    private double humidity;
 
     @JsonProperty("MODE")
     private String mode;
@@ -27,16 +42,6 @@ public class SensorData {
     @JsonProperty("SPEED")
     private int speed;
 
-    @JsonProperty("PM1.0")
-    private double pm1_0;
-
-    @JsonProperty("PM2.5")
-    private double pm2_5;
-
-    @JsonProperty("PM10")
-    private double pm10;
-
-    @JsonProperty("전력량")
-    private double powerUsage;
-
+    @JsonProperty("POWER")
+    private String powerStatus;
 }
