@@ -4,6 +4,7 @@
 *.iml
 *.class
 *.swp
+.idea/
 
 # ✅ 2. IntelliJ 관련
 ../404_web_server/.idea/
