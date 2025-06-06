@@ -10,7 +10,8 @@ function SensorData() {
           HUM: 0,
           MODE: "-",
           SPEED: 0,
-          "PM1.0": 0,
+          "POWER":"-",
+          "PM1": 0,
           "PM2.5": 0,
           PM10: 0,
           "전력량": 0,
@@ -52,9 +53,11 @@ function SensorData() {
                                <th>Humidity</th>
                                <th>Mode</th>
                                <th>Speed</th>
+                               <th>POWER</th>
                                <th>PM1.0</th>
                                <th>PM2.5</th>
                                <th>PM10</th>
+                               <th>전력</th>
                                <th>Power Usage</th>
                            </tr>
                        </thead>
@@ -69,9 +72,11 @@ function SensorData() {
                                     <td>{data["HUM"]}</td>
                                     <td>{data["MODE"]}</td>
                                     <td>{data["SPEED"]}</td>
-                                    <td>{data["PM1.0"]} µg/m³</td>
+                                     <td>{data["POWER"]}</td>
+                                    <td>{data["PM1"]} µg/m³</td>
                                     <td>{data["PM2.5"]} µg/m³</td>
                                     <td>{data["PM10"]} µg/m³</td>
+                                    <td>{(data["CURRENT"] * data["VOLT"]).toFixed(2)} W</td>
                                     <td>{data["전력량"]} kWh</td>
                                 </tr>
                             ))}
