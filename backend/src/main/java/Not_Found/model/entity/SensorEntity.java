@@ -32,10 +32,12 @@ public class SensorEntity {
 
 
     private double current;
+    private double volt;
     private double temp;
     private double hum;
     private String mode;
     private int speed;
+    private String power;  // ← 추가!
     private double pm1_0;
     private double pm2_5;
     private double pm10;
