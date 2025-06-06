@@ -1,11 +1,9 @@
 package Not_Found.config;
 
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import Not_Found.model.dto.SensorData;
 import Not_Found.handler.SensorWebSocketHandler;
-import Not_Found.service.SensorService;
-import Not_Found.util.MyUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import Not_Found.service.SensorDataSaveService;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,16 +24,7 @@ import javax.net.ssl.SSLContext;
 public class MqttConfig {
 
     @Autowired
-    private SensorService sensorService;
-
-    public void updateSensorData(SensorData sensorData) {
-        // 👉 DB에 저장
-        sensorService.saveSensorData(sensorData);
-
-        // (필요시 기타 로직)
-    }
-
-
+    private SensorDataSaveService sensorDataSaveService;
 
     @Autowired
     private SensorWebSocketHandler sensorWebSocketHandler;
@@ -55,86 +44,88 @@ public class MqttConfig {
     @Value("${mqtt.topic}")
     private String topic;
 
-    // 1) MQTT ClientFactory
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
-
-        // MqttConnectOptions를 사용하여 연결 옵션 설정
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setServerURIs(new String[] {brokerUrl});  // 서버 URI 설정
-        options.setUserName(username);  // 사용자명 설정 (필요한 경우)
-        options.setPassword(password.toCharArray());  // 비밀번호 설정 (필요한 경우)
-
-
-
-        // 3) SSLContext 설정 (필요 시)
+        options.setServerURIs(new String[]{ brokerUrl });
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
+        options.setCleanSession(false);
+        options.setKeepAliveInterval(20);
+        options.setAutomaticReconnect(true);
         try {
             SSLContext sslContext = SSLContext.getDefault();
             options.setSocketFactory(sslContext.getSocketFactory());
         } catch (Exception e) {
-            // SSLContext 알고리즘을 못 찾으면 런타임 예외로 감싸서 던집니다.
             throw new IllegalStateException("Failed to configure SSL for MQTT", e);
         }
-
-        factory.setConnectionOptions(options);  // factory에 연결 옵션 설정
+        factory.setConnectionOptions(options);
         return factory;
     }
 
-    // 2) 메시지를 내부로 전달할 채널
     @Bean
     public MessageChannel mqttInputChannel() {
         return new DirectChannel();
     }
 
-    // 3) MQTT 브로커로부터 메시지를 구독하는 어댑터
     @Bean
     public MessageProducer inboundAdapter(MqttPahoClientFactory factory) {
+        String subscriberClientId = clientId;
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(clientId, factory, topic);
+                new MqttPahoMessageDrivenChannelAdapter(subscriberClientId, factory, topic);
+
         adapter.setCompletionTimeout(5000);
+        adapter.setConverter(new org.springframework.integration.mqtt.support.DefaultPahoMessageConverter());
         adapter.setQos(1);
+        adapter.setAutoStartup(true);
+        adapter.setRecoveryInterval(5000);
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }
 
-    // 4) 채널로 들어온 메시지를 처리할 핸들러
+    // ───────────────────────────────────────────────────────────────────
+    // ① MQTT 메시지 수신 → ② 저장 서비스 호출 → ③ DTO(JSON)만 WebSocket에 전송
+    // ───────────────────────────────────────────────────────────────────
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler handler() {
         return message -> {
-            String payload = (String) message.getPayload();
-            System.out.println(MyUtil.BLUE + MyUtil.BOLD + "▶️ MQTT 메시지 수신 : " + payload + MyUtil.END);
+            String payload   = (String) message.getPayload();
+            String fullTopic = (String) message.getHeaders().get("mqtt_receivedTopic");
+            System.out.println("▶️ MQTT 메시지 수신 (토픽: " + fullTopic + ") : " + payload);
 
+            // 토픽이 "sensordata/{room}" 형태라면 room 부분만 떼어내기
+            String room = null;
+            if (fullTopic != null && fullTopic.startsWith("sensordata/")) {
+                room = fullTopic.substring("sensordata/".length());
+            }
+
+            // payload에 여러 JSON이 붙어 있다면 분리 (예: "{}{}" 형태)
+            String[] jsonMessages = payload.split("(?<=\\})\\s*(?=\\{)");
             ObjectMapper objectMapper = new ObjectMapper();
 
-            try {
-                // JSON 여러 개가 붙어 있을 경우 분리
-                String[] jsonMessages = payload.split("(?<=\\})\\s*(?=\\{)");
-//                (?<=\}): 앞이 }일 때 (정규식)
-//                (?=\{): 뒤가 {일 때 -> 즉, }{ 또는 } { 사이를 기준으로 분리
-
-                for (String json : jsonMessages) {
-                    try {
-                        SensorData sensorData = objectMapper.readValue(json, SensorData.class);
-
-//                        // SensorController로 전달 → DB 저장
-//                        sensorController.updateSensorData(sensorData);
-
-                        // WebSocket 브로드캐스트
-                        String sensorJson = objectMapper.writeValueAsString(sensorData);
-                        sensorWebSocketHandler.broadcast(sensorJson);
-
-                    } catch (Exception e) {
-                        System.err.println("❌ 개별 JSON 파싱 실패: " + json);
-                        e.printStackTrace();
+            for (String json : jsonMessages) {
+                try {
+                    // (1) JSON + room을 서비스에 넘겨서 한 번만 저장 → SensorData DTO 반환
+                    SensorData savedDto = sensorDataSaveService.handleIncomingSensorData(json);
+                    if (savedDto == null) {
+                        // 저장 실패 시 건너뛰기
+                        continue;
                     }
+
+                    // (2) 저장된 DTO를 JSON 문자열로 변환
+                    String sensorJson = objectMapper.writeValueAsString(savedDto);
+
+                    // (3) WebSocketHandler에 “전송만” 위임
+                    sensorWebSocketHandler.broadcastWithoutSave(sensorJson);
+
+                    System.out.println("✅ 센서 데이터 저장 후 WebSocket 브로드캐스트 → room=" + room);
+                } catch (Exception e) {
+                    System.err.println("❌ 개별 JSON 처리 실패: " + json);
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                System.err.println("🚨 전체 메시지 처리 실패: " + payload);
-                e.printStackTrace();
             }
         };
     }
-
 }
