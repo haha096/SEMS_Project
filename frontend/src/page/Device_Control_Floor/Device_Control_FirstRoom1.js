@@ -91,7 +91,7 @@ function Device_Control_FirstRoom1(){
                 </div>
             </div>
 
-            <div className="saved-level-text">현재 설정: {scdavedLevel}단</div>
+            <div className="saved-level-text">현재 설정: {savedLevel}단</div>
         </div>
 
 
