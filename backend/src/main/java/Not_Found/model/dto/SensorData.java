@@ -30,10 +30,13 @@ public class SensorData {
     @JsonProperty("SPEED")
     private int speed;
 
-    @JsonProperty("PM1.0")
+    @JsonProperty("POWER")
+    private String power;
+
+    @JsonProperty("PM1")
     private double pm1_0;
 
-    @JsonProperty("PM2.5")
+    @JsonProperty("PM2_5")
     private double pm2_5;
 
     @JsonProperty("PM10")

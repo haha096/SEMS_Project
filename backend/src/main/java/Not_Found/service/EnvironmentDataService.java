@@ -90,8 +90,8 @@ public class EnvironmentDataService {
             }
 
             Object[] result = resultList.get(0); // 첫 번째 결과만 사용
-            if (result.length < 3) {
-                System.err.println("getTimeDiff 결과 배열 크기가 부족함");
+            if (result.length < 3 || result[0] == null || result[1] == null || result[2] == null) {
+                System.err.println("getTimeDiff 결과가 null 포함 또는 배열 크기 부족");
                 return new UsageTimeDTO(0, 0, 0);
             }
 

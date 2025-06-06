@@ -28,10 +28,12 @@ public class SensorService {
         // DTO → Entity 변환
         SensorEntity entity = new SensorEntity();
         entity.setCurrent(dto.getCurrent());
+        entity.setVolt(dto.getVolt());
         entity.setTemp(dto.getTemp());
         entity.setHum(dto.getHum());
         entity.setMode(dto.getMode());
         entity.setSpeed(dto.getSpeed());
+        entity.setPower(dto.getPower());
         entity.setPm1_0(dto.getPm1_0());
         entity.setPm2_5(dto.getPm2_5());
         entity.setPm10(dto.getPm10());
@@ -54,10 +56,12 @@ public class SensorService {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                     dto.setTimestamp(entity.getTimestamp().format(formatter));  // LocalDateTime을 String으로 포맷
                     dto.setCurrent(entity.getCurrent());
+                    dto.setVolt(entity.getVolt());
                     dto.setTemp(entity.getTemp());
                     dto.setHum(entity.getHum());
                     dto.setMode(entity.getMode());
                     dto.setSpeed(entity.getSpeed());
+                    dto.setPower(entity.getPower());
                     dto.setPm1_0(entity.getPm1_0());
                     dto.setPm2_5(entity.getPm2_5());
                     dto.setPm10(entity.getPm10());
@@ -79,10 +83,12 @@ public class SensorService {
             dto.setTimestamp(entity.getTimestamp().format(formatter));  // LocalDateTime을 String으로 포맷
             dto.setId(entity.getId());
             dto.setCurrent(entity.getCurrent());
+            dto.setVolt(entity.getVolt());
             dto.setTemp(entity.getTemp());
             dto.setHum(entity.getHum());
             dto.setMode(entity.getMode());
             dto.setSpeed(entity.getSpeed());
+            dto.setPower(entity.getPower());
             dto.setPm1_0(entity.getPm1_0());
             dto.setPm2_5(entity.getPm2_5());
             dto.setPm10(entity.getPm10());
