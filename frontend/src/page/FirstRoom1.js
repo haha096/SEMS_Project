@@ -15,16 +15,22 @@ function FirstRoom1(){
     const [tableData, setTableData] = useState([]);
 
     const handleSearch = () => {
-        if (!startDate || !endDate) {
+        if (!startDate) {
             alert("날짜를 선택하세요.");
             return;
         }
 
+        const baseUrl = `http://localhost:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
+        let query = `?start=${startDate}&type=${type}`;
+
+        if (endDate) {
+            query += `&end=${endDate}`;
+        }
+
         if (viewMode === 'chart') {
-            const url = `http://localhost:5000/chart?start=${startDate}&end=${endDate}&type=${type}`;
-            setChartUrl(url);
+            setChartUrl(baseUrl + query);
         } else {
-            fetch(`http://localhost:5000/table?start=${startDate}&end=${endDate}&type=${type}`)
+            fetch(baseUrl + query)
                 .then((res) => res.json())
                 .then((data) => setTableData(data));
         }
@@ -64,12 +70,8 @@ function FirstRoom1(){
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                 />
-                &nbsp;-&nbsp;
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                />
+
+
             </div>
 
             <div className="detail_container2">

@@ -1,7 +1,12 @@
 package Not_Found.controller;
 
+import Not_Found.model.dto.EnvironmentDataDTO;
 import Not_Found.model.dto.SensorData;
+import Not_Found.model.dto.UsageTimeDTO;
+import Not_Found.service.EnvironmentDataService;
 import Not_Found.service.SensorService;
+
+
 import Not_Found.util.MyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,10 +22,12 @@ import java.util.List;
 public class SensorController {
 
     private final SensorService sensorService;
+    private final EnvironmentDataService environmentDataService;
 
     @Autowired
-    public SensorController(SensorService sensorService) {
+    public SensorController(SensorService sensorService,EnvironmentDataService environmentDataService) {
         this.sensorService = sensorService;
+        this.environmentDataService = environmentDataService;
     }
 
     // 최신 센서 데이터 조회
@@ -43,4 +50,10 @@ public class SensorController {
             throw e;
         }
     }
+
+    @GetMapping("/energy/usage-time")
+    public UsageTimeDTO getUsageTime() {//시간차
+        return environmentDataService.getUsageTime();
+    }
+
 }

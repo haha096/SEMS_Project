@@ -32,7 +32,7 @@ def get_filtered_data(start, end, column):
     conn = pymysql.connect(
         host='localhost',
         user='root',
-        password='root',
+        password='admin',
         db='springdb',
         charset='utf8mb4'
     )
@@ -60,9 +60,9 @@ def chart():
     end = request.args.get('end')
 
     type_map = {
-        'temperature': 'temperature',
-        'humidity': 'humidity',
-        'dust': 'dust'
+        'temperature': 'avg_temperature',
+        'humidity': 'avg_humidity',
+        'dust': 'avg_dust'
     }
 
     column = type_map.get(sensor_type)
@@ -79,7 +79,16 @@ def chart():
 
     data = get_filtered_data(start, end, column)
     if not data:
-        return "No data found", 404
+        buf = io.BytesIO()
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.axis('off')
+        ax.text(0.5, 0.5, "등록된 그래프가 없습니다", fontsize=24, ha='center', va='center', fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        plt.close(fig)
+        buf.seek(0)
+        return send_file(buf, mimetype='image/png')
+    data = data[-24:]
 
     x = [row[0] for row in data]
     y = [row[1] for row in data]
@@ -114,9 +123,9 @@ def table():
     end = request.args.get('end')
 
     type_map = {
-        'temperature': 'temp',
-        'humidity': 'hum',
-        'dust': 'pm2_5'
+        'temperature': 'avg_temperature',
+        'humidity': 'avg_humidity',
+        'dust': 'avg_dust'
     }
     column = type_map.get(sensor_type)
     if not column:
@@ -130,7 +139,15 @@ def table():
 
     data = get_filtered_data(start, end, column)
     if not data:
-        return jsonify([])
+        buf = io.BytesIO()
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.axis('off')
+        ax.text(0.5, 0.5, "등록된 그래프가 없습니다", fontsize=24, ha='center', va='center', fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        plt.close(fig)
+        buf.seek(0)
+        return send_file(buf, mimetype='image/png')
 
     result = [
         {'timestamp': str(row[0]), column: row[1]}

@@ -35,7 +35,7 @@ function Login({ handleLogin }) {
                         nickname: result.nickname,
                         isAdmin: result.isAdmin
                     }));
-                  
+
                     navigate("/");
                 } else {
                     setErrorMessage("로그인 성공했지만 닉네임이 없습니다.");
