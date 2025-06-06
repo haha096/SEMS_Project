@@ -41,6 +41,11 @@ public class EnvironmentDataScheduler {
         System.out.println("현재시간: " + now);
 
         sensorRepository.findTopByOrderByTimestampDesc().ifPresent(sensor -> {
+            if (environmentDataRepository.existsByTimestamp(sensor.getTimestamp())) {
+                System.out.println("이미 저장된 시간 데이터입니다. 저장 생략");
+                return;
+            }
+
             EnvironmentEntity data = new EnvironmentEntity();
             data.setSensorDataId(sensor.getId());
             data.setTemperature((float) sensor.getTemp());

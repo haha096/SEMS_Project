@@ -33,9 +33,9 @@ public class MqttSubscriber {
                 String payload = new String(message.getPayload());
                 System.out.println("수신됨 → " + new String(message.getPayload()));
 
-
                 //센서값이 잘 DB에 안 와서 추가한 DB저장용
                 sensorDataService.handleIncomingSensorData(payload);
+
             });
 
             System.out.println("MQTT 구독 시작됨 (sensor/topic)");
