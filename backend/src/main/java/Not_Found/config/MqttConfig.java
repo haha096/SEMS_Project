@@ -15,6 +15,7 @@ import org.springframework.integration.core.MessageProducer;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
@@ -128,4 +129,29 @@ public class MqttConfig {
             }
         };
     }
+
+    // ─────────────────────────────────────────────────────────────────
+    // (추가) ③ 퍼블리셔를 위한 아웃바운드 채널 & 핸들러
+    // ─────────────────────────────────────────────────────────────────
+    @Bean
+    public MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    @ServiceActivator(inputChannel = "mqttOutboundChannel")
+    public MessageHandler mqttOutbound(MqttPahoClientFactory factory) {
+        // clientId는 적당히 유니크한 값으로 설정하세요
+        MqttPahoMessageHandler handler = new MqttPahoMessageHandler("backendPublisher", factory);
+        handler.setAsync(true);
+        // 기본 토픽을 설정해도 되고, 동적으로 header("mqtt_topic")을 붙여서 보낼 수도 있습니다.
+        // 예를 들어 기본 토픽을 하나만 쓴다면 아래처럼 해도 됩니다.
+        // handler.setDefaultTopic(topic);   // application.properties에 정의된 mqtt.topic을 주입받아도 되고
+        return handler;
+    }
+
+
+
+
+
 }
