@@ -123,3 +123,36 @@
     cursor: pointer;
     margin-left: 100px;
 }
+
+
+/* 자동/수동 토글 버튼 전체 컨테이너 */
+.mode-toggle-group {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* 자동/수동 버튼 공통 */
+.mode-toggle-button {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    border: none;
+}
+
+/* 활성 상태(선택된 모드)일 때 강조 */
+.mode-toggle-button.active {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* 버튼 사이 경계선 (가운데) */
+.mode-toggle-button:not(:last-child) {
+    border-right: 1px solid #444;
+}

@@ -2,10 +2,12 @@
     width: 1708px;
     height: 435px;
 }
+
 .main-banner img {
     width: 100%;
     height: auto;
 }
+
 .container2 {
     margin-left: 100px;
     display: flex;
@@ -19,20 +21,24 @@
     width: 300px;
     height: 400px;
 }
+
 .indoor_content{
     display: flex;
     margin-top: 40px;
     width: 500px;
 }
+
 .outdoor_content{
     display: flex;
     margin-top: 40px;
     width: 500px;
 }
+
 #outdoor_container{
     margin-left: 150px;
     width: 500px;
 }
+
 .custom-box {
     border: 2px solid #1E6EFF;
     border-radius: 20px;
@@ -65,8 +71,6 @@
     line-height: 1.8;
 }
 
-
-
 #login_container {
     margin-left: 100px;
 }
@@ -84,6 +88,7 @@
     cursor: pointer;
     transition: background-color 0.3s;
 }
+
 .login_button {
     background-color: white;
     color: black;
@@ -92,11 +97,6 @@
     font-size: 16px;
     font-weight: bold;
 }
-
-
-
-
-
 
 .container4{
     margin-left: 100px;
@@ -200,4 +200,3 @@
 .login-action-button:hover {
     background-color: #2980b9;
 }
-

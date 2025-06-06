@@ -1,0 +1,37 @@
+.logincontainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 80px); /* 헤더/푸터 높이를 고려해 조정 */
+    background-color: #f9f9f9;
+}
+
+.welcomebox {
+    padding: 2rem 3rem;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background-color: #fff;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.welcomemessage {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    color: #333;
+}
+
+.loginactionbutton {
+    padding: 0.6rem 1.4rem;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.loginactionbutton:hover {
+    background-color: #45a049;
+}

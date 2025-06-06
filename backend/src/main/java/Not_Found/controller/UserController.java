@@ -37,6 +37,7 @@ public class UserController {
             session.setAttribute("userId", user.getId());
             session.setAttribute("nickname", user.getNickname());
             session.setAttribute("email", user.getEmail());
+            session.setAttribute("isAdmin", user.getIsAdmin());
 
             System.out.println("로그인 세션 ID: " + session.getId());
             System.out.println("로그인 저장된 userId: " + session.getAttribute("userId"));
@@ -46,6 +47,7 @@ public class UserController {
             response.put("userId", user.getId());
             response.put("nickname", user.getNickname());
             response.put("email", user.getEmail());
+            response.put("isAdmin", user.getIsAdmin());
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> error = new HashMap<>();
@@ -66,6 +68,7 @@ public class UserController {
             response.put("userId", userId);
             response.put("nickname", session.getAttribute("nickname"));
             response.put("email", session.getAttribute("email"));
+            response.put("isAdmin", session.getAttribute("isAdmin"));
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 상태가 아닙니다.");

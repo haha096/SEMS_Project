@@ -1,7 +1,6 @@
 package Not_Found.model.entity;
 
 import jakarta.persistence.*;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,29 +15,34 @@ public class EnvironmentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "sensor_data_id")
+    @Column(name = "sensor_data_id", nullable = false)
     private Long sensorDataId;
 
-    @Column(name = "temperature")
-    private Float temperature;
+    /** 센서에서 받은 실시간 온도 */
+    @Column(name = "temperature", nullable = false)
+    private Double temperature;
 
-    @Column(name = "humidity")
-    private Float humidity;
+    /** 센서에서 받은 실시간 습도 */
+    @Column(name = "humidity", nullable = false)
+    private Double humidity;
 
-    @Column(name = "dust")
-    private Float dust;
+    /** 센서에서 받은 실시간 미세먼지(PM2.5) */
+    @Column(name = "dust", nullable = false)
+    private Double dust;
 
-    @Column(name = "timestamp")
+    /** 측정 시각 */
+    @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 
+    /** 하루 평균용 온도 */
     @Column(name = "avg_temperature")
-    private Float avgTemperature;
+    private Double avgTemperature;
 
+    /** 하루 평균용 습도 */
     @Column(name = "avg_humidity")
-    private Float avgHumidity;
+    private Double avgHumidity;
 
+    /** 하루 평균용 미세먼지(PM2.5) */
     @Column(name = "avg_dust")
-    private Float avgDust;
-    // 생성자, Getter, Setter 또는 @Getter @Setter 사용해도 됨
+    private Double avgDust;
 }
-

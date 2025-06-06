@@ -14,5 +14,5 @@ import java.util.Optional;
 public interface EnvironmentDataRepository extends JpaRepository<EnvironmentEntity, Long> {
     List<EnvironmentEntity> findAllByTimestampBetween(LocalDateTime start, LocalDateTime end);
     boolean existsByTimestamp(LocalDateTime timestamp);
+    Optional<EnvironmentEntity> findByTimestamp(LocalDateTime timestamp);
 }
-
