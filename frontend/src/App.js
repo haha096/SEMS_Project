@@ -1,7 +1,6 @@
 import './App.css';
-import { useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import AppRouter from "./AppRouter";
-import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
 
 function App() {
     const [socket, setSocket] = useState(null);
@@ -11,7 +10,7 @@ function App() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [hasNewMessage, setHasNewMessage] = useState(false);
 
-    const handleLogin = (nickname) => {
+    const handleLogin = (nickname, isAdminValue) => {
         setIsLoggedIn(true);
         setUserNickname(nickname);
         setIsAdmin(isAdminValue);
@@ -27,7 +26,6 @@ function App() {
                 window.location.href = "/";
             })
             .catch(err => console.error("로그아웃 실패:", err));
-      
         setIsLoggedIn(false);
         setUserNickname("");
         setIsAdmin(false);
@@ -99,7 +97,6 @@ function App() {
             hasNewMessage={hasNewMessage}
             setHasNewMessage={setHasNewMessage}
         />
-
     );
 }
 

@@ -15,4 +15,3 @@ public interface EnvironmentDataRepository extends JpaRepository<EnvironmentEnti
     List<EnvironmentEntity> findAllByTimestampBetween(LocalDateTime start, LocalDateTime end);
     boolean existsByTimestamp(LocalDateTime timestamp);
 }
-
