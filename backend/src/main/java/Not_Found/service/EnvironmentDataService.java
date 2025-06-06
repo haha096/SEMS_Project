@@ -7,6 +7,7 @@ import Not_Found.repository.EnvironmentDataRepository;
 import Not_Found.repository.SensorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -118,6 +119,33 @@ public class EnvironmentDataService {
         } catch (Exception e) {
             e.printStackTrace();
             return new UsageTimeDTO(0, 0, 0);
+        }
+    }
+
+    public void updateMinuteAverages(LocalDateTime minute) {
+        LocalDateTime start = minute.withSecond(0).withNano(0);
+        LocalDateTime end = start.plusMinutes(1);
+
+        List<SensorEntity> sensors = sensorRepository.findByTimestampBetween(start, end);
+        if (sensors.isEmpty()) {
+            System.out.println("⚠️ 평균 계산할 센서 데이터 없음: " + start);
+            return;
+        }
+
+        double avgTemp = sensors.stream().mapToDouble(SensorEntity::getTemperature).average().orElse(0.0);
+        double avgHum = sensors.stream().mapToDouble(SensorEntity::getHumidity).average().orElse(0.0);
+        double avgDust = sensors.stream().mapToDouble(SensorEntity::getPm10).average().orElse(0.0); // 여기 pm10 기준
+
+        Optional<EnvironmentEntity> optional = environmentDataRepository.findByTimestamp(start);
+        if (optional.isPresent()) {
+            EnvironmentEntity env = optional.get();
+            env.setAvgTemperature(avgTemp);
+            env.setAvgHumidity(avgHum);
+            env.setAvgDust(avgDust);
+            environmentDataRepository.save(env);
+            System.out.println("✅ 분 단위 평균 업데이트 완료 → " + start);
+        } else {
+            System.out.println("❌ 해당 시간의 환경데이터 없음 → " + start);
         }
     }
 }
