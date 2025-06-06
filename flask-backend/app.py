@@ -32,7 +32,7 @@ def get_filtered_data(start, end, column):
     conn = pymysql.connect(
         host='localhost',
         user='root',
-        password='root',
+        password='admin',
         db='springdb',
         charset='utf8mb4'
     )
