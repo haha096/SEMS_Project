@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Monitoring_indoor_FirstRoom1 from "./Floor/Monitoring_indoor_FirstRoom1";
 import '../../css/page_css/Monitoring_indoor.css'
 
-function Monitoring_indoor(){
+function Monitoring_indoor({ socket }){
 
     const [showSubmenu, setShowSubmenu] = useState(false);
 
@@ -14,10 +14,13 @@ function Monitoring_indoor(){
     const [show2F, setShow2F] = useState(false);
     const [show3F, setShow3F] = useState(false);
 
+
+
+
     const renderContent = () => {
         switch (activeRoom) {
             case "1-1교실":
-                return <Monitoring_indoor_FirstRoom1 />;
+                return <Monitoring_indoor_FirstRoom1 socket={ socket }/>;
             case "1-2교실":
                 return <p>📘 1층 - 1-2교실 페이지입니다.</p>;
             case "도서관":
