@@ -42,7 +42,6 @@ def get_filtered_data(date_str, column):
             FROM environment_data
             WHERE DATE(timestamp) = %s
             ORDER BY timestamp DESC
-            LIMIT 24
         ) AS sub
         ORDER BY timestamp ASC
     """
@@ -98,11 +97,26 @@ def chart():
     if not data:
         return _draw_message_image("등록된 그래프가 없습니다")
 
-    # x축: 시간, y축: 값
     x = [row[0] for row in data]
     y = [row[1] for row in data]
 
-    fig, ax = plt.subplots(figsize=(max(10, len(x) * 0.4), 5))
+    #그래프 고정 크기로 설정
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    #너무 많아도 안 깨지게
+    ax.plot(x, y, marker='o', markersize=2, linestyle='-')
+
+    ax.set_title(f"{sensor_type} 데이터 그래프")
+    ax.set_xlabel("시간")
+    ax.set_ylabel(column)
+
+    #x축 라벨 자동 간격 조정
+    locator = AutoDateLocator(minticks=5, maxticks=10)
+    formatter = ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+
+    fig.autofmt_xdate()  # x축 라벨 기울이기
     ax.plot(x, y, marker='o', linestyle='-')
     ax.set_title(f"{sensor_type} 데이터 그래프")
     ax.set_xlabel("시간")
