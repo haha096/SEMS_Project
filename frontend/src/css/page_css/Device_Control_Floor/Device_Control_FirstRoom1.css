@@ -1,3 +1,5 @@
+/* Device_Control_FirstRoom1.css */
+
 .device_control_detail-container {
     padding: 20px;
     font-family: 'Noto Sans KR', sans-serif;
@@ -24,15 +26,17 @@
 .status-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;       /* ⬅ 수직 가운데 정렬 */
+    align-items: center;
     padding: 20px 24px;
     font-size: 20px;
     font-weight: 500;
     border-bottom: 1px solid #2980b9;
 }
 
-.device_control_detail-container3{
+/* 전원 제어 섹션 */
+.device_control_detail-container3 {
     display: flex;
+    align-items: center;
     margin-left: 30px;
 }
 
@@ -66,7 +70,57 @@
     color: white;
 }
 
+/* 제어 모드 레이블 + 토글 섹션 */
+.mode-control-section {
+    display: flex;
+    align-items: center;
+    margin-left: 30px;
+    margin-top: 20px;
+}
 
+.aircon-control-label {
+    font-size: 20px;
+    font-weight: 400;
+    margin-right: 60px;
+    min-width: 160px;
+}
+
+.mode-toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.mode-toggle-button {
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    border: 2px solid #2c79ff;
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 29px;
+}
+
+.mode-toggle-button:hover:enabled {
+    background-color: #e6f0ff;
+}
+
+.mode-toggle-button.active {
+    background-color: #2c79ff;
+    color: white;
+}
+
+/* 전원 OFF 시 토글 비활성화 */
+.mode-toggle-button:disabled {
+    background-color: #f5f5f5;
+    color: #aaa;
+    border-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* 수동 설정 섹션 */
 .device_control_detail-container4 {
     display: flex;
     align-items: center;
@@ -124,35 +178,18 @@
     margin-left: 100px;
 }
 
-
-/* 자동/수동 토글 버튼 전체 컨테이너 */
-.mode-toggle-group {
-    display: flex;
-    width: 100%;
-    margin-bottom: 20px;
-    border: 1px solid #444;
-    border-radius: 4px;
-    overflow: hidden;
+.saved-level-text {
+    margin-left: 30px;
+    font-size: 18px;
+    margin-top: 10px;
 }
 
-/* 자동/수동 버튼 공통 */
-.mode-toggle-button {
-    flex: 1;
-    padding: 10px 0;
-    text-align: center;
+.status-message-box {
+    margin-left: 30px;
+    margin-top: 20px;
+}
+
+.status-message-text {
     font-size: 16px;
-    cursor: pointer;
-    background-color: #f0f0f0;
-    border: none;
-}
-
-/* 활성 상태(선택된 모드)일 때 강조 */
-.mode-toggle-button.active {
-    background-color: #4caf50;
-    color: white;
-}
-
-/* 버튼 사이 경계선 (가운데) */
-.mode-toggle-button:not(:last-child) {
-    border-right: 1px solid #444;
+    color: #555;
 }

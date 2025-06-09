@@ -134,26 +134,27 @@ function Device_Control_FirstRoom1() {
             {/* ────────────────────────────────────────────────────────── */}
             {/* 자동 / 수동 모드 토글 버튼 추가 */}
             {/* ────────────────────────────────────────────────────────── */}
-            <div className="mode-toggle-group">
-                {/* 자동 버튼 */}
-                <button
-                    className={`mode-toggle-button ${mode === "AUTO" ? "active" : ""}`}
-                    onClick={handleAutoMode}
-                >
-                    자동
-                </button>
-
-                {/* 수동 버튼 */}
-                <button
-                    className={`mode-toggle-button ${mode === "MANUAL" ? "active" : ""}`}
-                    onClick={() => {
-                        // UI만 먼저 수동 모드로 바꾸고, 실제 백엔드 호출은 '저장' 버튼에서 처리
-                        setMode("MANUAL");
-                        setStatusMessage("수동 모드 선택됨. 레벨을 조정하고 저장하세요.");
-                    }}
-                >
-                    수동
-                </button>
+            <div className="mode-control-section">
+                <div className="aircon-control-label">공기청정기 제어</div>
+                <div className="mode-toggle-group">
+                    <button
+                        className={`mode-toggle-button ${mode === "AUTO" ? "active" : ""}`}
+                        onClick={handleAutoMode}
+                        disabled={!powerOn}           // 전원 OFF면 비활성화
+                    >
+                        자동
+                    </button>
+                    <button
+                        className={`mode-toggle-button ${mode === "MANUAL" ? "active" : ""}`}
+                        onClick={() => {
+                            setMode("MANUAL");
+                            setStatusMessage("수동 모드 선택됨. 레벨을 조정하고 저장하세요.");
+                        }}
+                        disabled={!powerOn}           // 전원 OFF면 비활성화
+                    >
+                        수동
+                    </button>
+                </div>
             </div>
 
             {/* 자동 모드일 경우엔 수동 레벨 UI를 회색 처리(비활성화)하거나 감출 수 있습니다. */}

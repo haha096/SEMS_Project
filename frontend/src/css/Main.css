@@ -39,6 +39,16 @@
     width: 500px;
 }
 
+.saving_energy_wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 12px;
+
+    /* 아래 margin-top 값을 음수로 주면 위로 올라갑니다 */
+    margin-top: -100px;  /* 원하시는 만큼 ↑값을 키워보세요 */
+}
+
 .custom-box {
     border: 2px solid #1E6EFF;
     border-radius: 20px;

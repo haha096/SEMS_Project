@@ -24,47 +24,6 @@ import { Client } from '@stomp/stompjs';
 function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, handleLogout, socket, hasNewMessage, setHasNewMessage }) {
     const clientRef = useRef(null);
 
-    useEffect(() => {
-        if (!userNickname) return;
-
-        const client = new Client({
-            webSocketFactory: () => new SockJS(`http://localhost:8080/ws?userId=${userNickname}`),
-            reconnectDelay: 5000,
-            onConnect: () => {
-                console.log('[AppRouter] STOMP connected');
-
-                if (isAdmin) {
-                    client.subscribe('/topic/messages/admin', (msg) => {
-                        const message = JSON.parse(msg.body);
-                        console.log('[AppRouter] 관리자가 메시지를 수신했습니다:', message);
-                        setHasNewMessage(true);
-                    });
-                } else {
-                    client.subscribe('/user/queue/messages', (msg) => {
-                        const message = JSON.parse(msg.body);
-                        console.log('[AppRouter] 유저가 메시지를 수신했습니다:', message);
-                        setHasNewMessage(true);
-                    });
-                }
-            },
-            onStompError: (frame) => {
-                console.error('STOMP error:', frame);
-            }
-        });
-
-        client.activate();
-        clientRef.current = client;
-
-        return () => {
-            if (clientRef.current && clientRef.current.active) {
-                clientRef.current.deactivate().then(() => {
-                    console.log('[AppRouter] WebSocket disconnected');
-                    clientRef.current = null;
-                });
-            }
-        };
-    }, [isAdmin, userNickname, setHasNewMessage]);
-
     return (
         <Router>
             <Header
@@ -75,17 +34,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
             />
 
             <Routes>
-                <Route
-                    path="/"
-                    element={
-                        <Main
-                            message={message}
-                            isLoggedIn={isLoggedIn}
-                            userNickname={userNickname}
-                            socket={socket}
-                        />
-                    }
-                />
+                <Route path="/" element={<Main message={message} isLoggedIn={isLoggedIn} userNickname={userNickname} socket={socket} />} />
                 <Route path="/login" element={<Login handleLogin={handleLogin} />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/find-id" element={<FindId />} />
@@ -94,7 +43,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 <Route path="/chatt" element={<Chat />} />
                 <Route path="/sensor" element={<SensorData />} />
                 <Route path="/dataanalysis" element={<DataAnalysis />} />
-                <Route path="/monitoring_indoor" element={<Monitoring_indoor />} />
+                <Route path="/monitoring_indoor" element={<Monitoring_indoor socket={socket}/>} />
                 <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
                 <Route path="/devicecontrol" element={<Device_Control />} />
                 <Route path="/mypage" element={<MyPage />} />
@@ -113,6 +62,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                     }
                 />
             </Routes>
+
             <Footer />
         </Router>
     );
