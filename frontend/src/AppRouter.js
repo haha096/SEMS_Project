@@ -43,7 +43,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 <Route path="/chatt" element={<Chat />} />
                 <Route path="/sensor" element={<SensorData />} />
                 <Route path="/dataanalysis" element={<DataAnalysis />} />
-                <Route path="/monitoring_indoor" element={<Monitoring_indoor />} />
+                <Route path="/monitoring_indoor" element={<Monitoring_indoor socket={socket}/>} />
                 <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
                 <Route path="/devicecontrol" element={<Device_Control />} />
                 <Route path="/mypage" element={<MyPage />} />

@@ -7,34 +7,36 @@ function FirstRoom1(){
     const [endDate, setEndDate] = useState('');
 
     const [type, setType] = useState('temperature'); //온도를 선택하면
-                                                                     // 온도 그래프를 보이게하도록 설계
+    // 온도 그래프를 보이게하도록 설계
 
     const [viewMode, setViewMode] = useState('chart');
     const [chartUrl, setChartUrl] = useState("http://localhost:5000/chart");
     //표 렌더링 컴포넌트
     const [tableData, setTableData] = useState([]);
 
+    const typeMap = {
+        temperature: "avg_temperature",
+        humidity: "avg_humidity",
+        dust: "avg_dust"
+    };
+
     const handleSearch = () => {
-        if (!startDate || !endDate) {
+        if (!startDate) {
             alert("날짜를 선택하세요.");
             return;
         }
 
+        const baseUrl = `http://localhost:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
+        const finalEndDate = endDate || startDate;
+        const query = `?start=${startDate}&end=${finalEndDate}&type=${type}`;
+
         if (viewMode === 'chart') {
-            const url = `http://localhost:5000/chart?start=${startDate}&end=${endDate}&type=${type}`;
-            setChartUrl(url);
+            setChartUrl(baseUrl + query);
         } else {
-            fetch(`http://localhost:5000/table?start=${startDate}&end=${endDate}&type=${type}`)
+            fetch(baseUrl + query)
                 .then((res) => res.json())
                 .then((data) => setTableData(data));
         }
-    };
-
-
-    const typeMap = {
-        temperature: "temp",
-        humidity: "hum",
-        dust: "pm2_5"
     };
 
     //처음에 들어가면 바로 데이터 시각화 그래프가 보일 수 있도록
@@ -56,7 +58,7 @@ function FirstRoom1(){
 
     return(
         <div className="first-room-wrapper">
-             📅 날짜 선택 영역
+            📅 날짜 선택 영역
             <div className="detail_container1">
                 <label>날짜 단위&nbsp;</label>
                 <input
@@ -64,12 +66,8 @@ function FirstRoom1(){
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                 />
-                &nbsp;-&nbsp;
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                />
+
+
             </div>
 
             <div className="detail_container2">
@@ -100,7 +98,7 @@ function FirstRoom1(){
 
                 <div className="search-button-container">
                     {/* 조회 버튼 */}
-                    <button className="search-button" onClick={handleSearch}>조회</button>
+
                 </div>
 
             </div>

@@ -29,16 +29,16 @@ public class MqttSubscriber {
 
             client.connect(options);
 
-            client.subscribe("sensor/topic", (topic, message) -> {
+            client.subscribe("sensordata/room1", (topic, message) -> {
                 String payload = new String(message.getPayload());
                 System.out.println("수신됨 → " + new String(message.getPayload()));
 
 
                 //센서값이 잘 DB에 안 와서 추가한 DB저장용
-                sensorDataService.handleIncomingSensorData(payload);
+                //sensorDataService.handleIncomingSensorData(payload);
             });
 
-            System.out.println("MQTT 구독 시작됨 (sensor/topic)");
+            System.out.println("✅ MQTT 구독 시작됨 (sensordata/room1)");
         } catch (Exception e) {
             e.printStackTrace();
         }

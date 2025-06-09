@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import "./css/Main.css";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import OutdoorBlue from './assets/outdoor_img/outdoor_blue.png';
 import OutdoorGreen from './assets/outdoor_img/outdoor_green.png';
@@ -20,12 +20,58 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
                                                    HUM: 0,
                                                    MODE: "-",
                                                    SPEED: 0,
-                                                   "PM1.0": 0,
+                                                   "PM1": 0,
                                                    "PM2.5": 0,
                                                    PM10: 0,
-                                                   "전력량": 0,
+                                                   "POWER": "-",
                                                  });
     const [lastMonthUsageSeconds, setLastMonthUsageSeconds] = useState("-");
+
+    const [oneMinCost, setOneMinCost] = useState(0);   // 1분간 누적 요금
+    const accumulatedCost = useRef(0);
+
+    const [savedCostByAutoMode, setSavedCostByAutoMode] = useState(0);
+    const accumulatedAutoSaving = useRef(0);
+
+    // sensorData와 lastMonthUsageSeconds가 바뀔 때마다 1초 기준 요금 계산하여 누적
+    useEffect(() => {
+        if (sensorData && lastMonthUsageSeconds !== "-" && lastMonthUsageSeconds > 0) {
+            // AUTO 모드에서만 절약 계산 수행
+            if (sensorData.MODE === "AUTO") {
+                const baseCurrent = 2; // 수동 모드 기준 고정 전류값
+                const actualCurrent = sensorData.CURRENT;
+                const savedEnergy = (baseCurrent - actualCurrent) * sensorData.VOLT * lastMonthUsageSeconds / 3600000;
+                const adjustedSavedEnergy = savedEnergy * 10; // 보정값
+                const savedCost = adjustedSavedEnergy * 100;
+
+                // 음수 절약 방지
+                if (savedCost > 0) {
+                    accumulatedAutoSaving.current += savedCost;
+                }
+            }
+
+            // 누적 사용 요금 계산 (기존 코드 유지)
+            const energy_kWh = (sensorData.CURRENT * sensorData.VOLT * lastMonthUsageSeconds) / 3600000;
+            const adjusted_kWh = energy_kWh * 10;
+            const cost_per_sec = adjusted_kWh * 100;
+            accumulatedCost.current += cost_per_sec;
+        }
+    }, [sensorData, lastMonthUsageSeconds]);
+
+    // 1분마다 누적 비용을 state에 반영하고 초기화
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setOneMinCost(accumulatedCost.current.toFixed(2));
+            setSavedCostByAutoMode(accumulatedAutoSaving.current.toFixed(2));
+
+            accumulatedCost.current = 0;
+            accumulatedAutoSaving.current = 0;
+        }, 10000); // 10초
+
+        return () => clearInterval(interval);
+    }, []);
+
+
 
 
 
@@ -120,7 +166,7 @@ useEffect(() => {
                         <div className="info-text">
                             <p>현재 실내 온도 : {sensorData["TEMP"]}도</p>
                             <p>현재 실내 습도 : {sensorData["HUM"]}%</p>
-                            <p>현재 실내 미세먼지 : {sensorData["PM1.0"]}ug</p>
+                            <p>현재 실내 미세먼지 : {sensorData["PM1"]}ug</p>
                         </div>
                     </div> {/* indoor_content */}
                 </div> {/* container3 */}
@@ -159,10 +205,7 @@ useEffect(() => {
                     </div>
                 )}
 
-
-
             </div> {/* container2 */}
-
 
             <div className="container4">
                 <div className="energy_title">
@@ -171,9 +214,9 @@ useEffect(() => {
 
                 <div className="container5"> {/* 지난달 에너지 총량, next이미지, 이번달 에너지 총량, 절약힌 에너지*/}
                     <div className="container6">
-                        <h2 className="title">지난 달 에너지 총량</h2>
+                        <h2 className="title">사용시간</h2>
                         <img src="/images/indoor_yellow.PNG" alt="에너지 아이콘" className="energy-icon" />
-                        <p className="energy-text">공기 청정기 쓴 에너지<br />{lastMonthUsageSeconds}</p>
+                        <p className="energy-text">공기 청정기 쓴 시간<br />{lastMonthUsageSeconds} 초</p>
                     </div> {/* container6 */}
 
 
@@ -183,17 +226,21 @@ useEffect(() => {
 
 
                     <div className="container6">
-                        <h2 className="title">지난 달 에너지 총량</h2>
+                        <h2 className="title">전력량</h2>
                         <img src="/images/indoor_blue.PNG" alt="에너지 아이콘" className="energy-icon" />
-                        <p className="energy-text">공기 청정기 전류<br />{sensorData.CURRENT}</p>
+                        <p className="energy-text">공기 청정기 전력량<br /> {( (sensorData.CURRENT * sensorData.VOLT * lastMonthUsageSeconds) / 3600000 * 10 /* 오차값 */ ).toFixed(2)}  kWh</p>
                     </div> {/* container6 */}
 
-
-                    <div className="saving_energy_container">
-                        <p className="saving_energy_title">총 절약한 에너지</p>
-                        <p className="saving_energy_amount">24만원</p>
+                    <div className="saving_energy_wrapper">
+                        <div className="saving_energy_container">
+                            <p className="saving_energy_title">최근 10초간 전기요금</p>
+                            <p className="saving_energy_amount">{oneMinCost}원</p>
+                        </div>
+                        <div className="saving_energy_container">
+                            <p className="saving_energy_title">AUTO 모드로 절약된 요금</p>
+                            <p className="saving_energy_amount">{savedCostByAutoMode}원</p>
+                        </div>
                     </div>
-
                 </div> {/* container5 */}
 
             </div> {/* container4 */}
