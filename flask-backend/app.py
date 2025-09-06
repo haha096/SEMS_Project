@@ -29,7 +29,7 @@ def get_filtered_data(date_str, column):
     conn = pymysql.connect(
         host='localhost',
         user='root',
-        password='admin',
+        password='root',
         db='springdb',
         charset='utf8mb4'
     )
