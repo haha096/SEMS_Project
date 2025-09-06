@@ -42,7 +42,7 @@ function ForecastGraph() {
         <div>
             <br />
             <div className="data-analysis-container">
-                <h2>데이터 분석</h2>
+                <h2>예측 그래프</h2>
             </div>
             <br />
 

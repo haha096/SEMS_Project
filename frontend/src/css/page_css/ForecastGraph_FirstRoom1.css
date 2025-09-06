@@ -1,0 +1,124 @@
+/* 레이아웃 */
+.forecast-root { display: block; }
+.forecast-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+}
+
+/* ===== 좌측 조건 패널 ===== */
+.forecast-aside {
+    background: #f5f6f8;            /* 연한 회색 */
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+}
+.forecast-aside-title {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #333;
+    font-weight: 700;
+}
+.forecast-label-block {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #374151;
+}
+.forecast-input {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+.w-full { width: 100%; }
+
+/* 조건 박스 */
+.forecast-box {
+    margin-top: 14px;
+    background: #eceff3;            /* 내부 박스 회색 */
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    display: grid;
+    gap: 12px;
+}
+.forecast-group { display: flex; flex-direction: column; gap: 6px; }
+.forecast-group-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 2px;
+}
+.forecast-radio { display: inline-flex; align-items: center; gap: 6px; color: #111827; }
+
+/* ===== 우측 콘텐츠 ===== */
+.forecast-main { position: relative; }
+.forecast-switchbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+
+/* 화살표 버튼 */
+.forecast-arrow {
+    border: none;
+    background: #ffffff;
+    box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    opacity: .9;
+    margin-left: 6px;
+}
+
+/* 슬라이더 */
+.forecast-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden; /* 슬라이드 영역 밖은 잘라냄 */
+}
+
+.forecast-slider-inner {
+    display: flex;
+    width: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+.forecast-slide {
+    flex: 0 0 100%; /* 한 슬라이드가 정확히 100% 너비 차지 */
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* 카드/표/이미지 */
+.forecast-card {
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    background: #fff;
+    padding: 8px;
+    min-height: 360px;
+    display: grid;
+    place-items: center;
+}
+.forecast-chart-img { max-width: 100%; height: auto; display: block; }
+
+.forecast-table-wrap { width: 100%; overflow-x: auto; }
+.forecast-table { width: 100%; border-collapse: collapse; }
+.forecast-table th, .forecast-table td {
+    border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
+}
+.forecast-table thead th { background: #f8fafc; }
+
+/* 전력 예측 자리 */
+.forecast-placeholder {
+    border: 1px dashed #cbd5e1; border-radius: 12px;
+    background: #f8fafc; color: #475569;
+    padding: 24px; min-height: 360px;
+    display: grid; place-items: center; text-align: center;
+}
+.forecast-placeholder-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.forecast-placeholder-desc  { opacity: .8; }
+
+/* 반응형 */
+@media (max-width: 960px) {
+    .forecast-layout { grid-template-columns: 1fr; }
+}
