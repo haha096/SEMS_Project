@@ -20,6 +20,7 @@ import UpdatePwd from "./mypage/UpdatePwd";
 import {useEffect, useRef, useState} from "react";
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import ForecastGraph from "./page/Forecast/ForecastGraph";
 
 function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, handleLogout, socket, hasNewMessage, setHasNewMessage }) {
     const clientRef = useRef(null);
@@ -43,6 +44,7 @@ function AppRouter({ message, isLoggedIn, userNickname, isAdmin, handleLogin, ha
                 <Route path="/chatt" element={<Chat />} />
                 <Route path="/sensor" element={<SensorData />} />
                 <Route path="/dataanalysis" element={<DataAnalysis />} />
+                <Route path="/forecastgraph" element={<ForecastGraph />} />
                 <Route path="/monitoring_indoor" element={<Monitoring_indoor socket={socket}/>} />
                 <Route path="/monitoring_outdoor" element={<Monitoring_outdoor />} />
                 <Route path="/devicecontrol" element={<Device_Control />} />

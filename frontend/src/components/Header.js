@@ -23,6 +23,7 @@ function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
                 <Link to="/Monitoring_indoor" style={{ textDecoration: 'none' }}>온습도 / 미세먼지 모니터링</Link>
                 <Link to="/dataanalysis" style={{ textDecoration: 'none' }}>데이터 분석</Link>
                 <Link to="/" style={{ textDecoration: 'none' }}>보고서</Link>
+                <Link to="/forecastgraph" style={{ textDecoration: 'none' }}>예측 그래프</Link>
                 <Link to="/devicecontrol" style={{ textDecoration: 'none' }}>기기 제어</Link>
                 <button onClick={handleMyPageClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
                     내정보
