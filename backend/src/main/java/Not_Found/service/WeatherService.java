@@ -1,10 +1,12 @@
 package Not_Found.service;
 
+import Not_Found.dto.DustDto;
 import Not_Found.key.WeatherForecastKey;
 import Not_Found.model.entity.WeatherForecastEntity;
 import Not_Found.repository.WeatherForecastRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +17,22 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class WeatherService {
     private final String SERVICE_KEY = "aRR3w6mDjeHK2c/K0yCtN4sBv9cfvDUUeMGrTzd3yzSdnwZEy7JXg0EWT/EaYLstuzcUPmTMotKVOpP3R3mgqQ==";
+
+    private final WeatherForecastRepository forecastRepo;
+    private final DustService dustService;
+
+    public WeatherService(WeatherForecastRepository forecastRepo, DustService dustService) {
+        this.forecastRepo = forecastRepo;
+        this.dustService = dustService;
+    }
+
+    private Double toD(String s){
+        if (s == null) return null;
+        s = s.trim();
+        if (s.isEmpty() || s.equals("-")) return null;  // ← 결측 처리
+        try { return Double.valueOf(s); }
+        catch (Exception e){ return null; }
+    }
 
     public String getWeatherData(int nx, int ny) {
         // 1. 날짜 및 시간 구하기 (기상청 기준은 매시간 40분 뒤 발표)
@@ -60,11 +78,9 @@ public class WeatherService {
         // 5. 결과 반환 (필요 시 JSON으로 포맷 가능)
         return String.format("온도: %s℃, 습도: %s%%", temperature, humidity);
     }
-    
-    //실외데이터를 DB안에 넣기 위한 작업
-    @Autowired
-    private WeatherForecastRepository forecastRepo;
 
+    //실외데이터를 DB안에 넣기 위한 작업
+    @Transactional
     public void saveForecastSnapshot(int locId,
                                      LocalDateTime snapshotMinute,
                                      Double temp1h, Double temp6h, Double temp24h,
@@ -73,24 +89,29 @@ public class WeatherService {
         // 분 단위로 깎은 값 -> 새 변수(ts)로 고정 (final처럼 사용)
         LocalDateTime ts = snapshotMinute.withSecond(0).withNano(0);
 
-        // 있으면 가져오고, 없으면 새로 만들기 (람다 X)
-        WeatherForecastEntity e = forecastRepo
-                .findByKeyIdAndKeyCurrent(locId, ts)
-                .orElse(null);
+        var e = forecastRepo.findByKeyIdAndKeyCurrent(locId, ts).orElseGet(() -> {
+            var ne = new WeatherForecastEntity();
+            ne.setKey(new Not_Found.key.WeatherForecastKey(locId, ts));
+            return ne;
+        });
 
-        if (e == null) {
-            e = new WeatherForecastEntity();
-            e.setKey(new WeatherForecastKey(locId, ts));
+        // 온/습 저장
+        e.setTemp1h(temp1h); e.setTemp6h(temp6h); e.setTemp24h(temp24h);
+        e.setHum1h(hum1h);   e.setHum6h(hum6h);   e.setHum24h(hum24h);
+
+        // ❗현재 미세먼지를 임시 예측으로 복사
+        DustDto d = dustService.getDustData();   // 네가 이미 만든 서비스
+        Double pm10 = toD(d.getPm10Value());
+        Double pm25 = toD(d.getPm25Value());
+        if (pm10 != null) {
+            e.setPm10_1h(pm10); e.setPm10_6h(pm10); e.setPm10_24h(pm10);
         }
+        if (pm25 != null) {
+            e.setPm25_1h(pm25); e.setPm25_6h(pm25); e.setPm25_24h(pm25);
+        }
+        System.out.println("[DUST] pm10Value=" + d.getPm10Value() + ", pm25Value=" + d.getPm25Value());
 
-        e.setTemp1h(temp1h);
-        e.setTemp6h(temp6h);
-        e.setTemp24h(temp24h);
-        e.setHum1h(hum1h);
-        e.setHum6h(hum6h);
-        e.setHum24h(hum24h);
-
-        forecastRepo.save(e); // 있으면 UPDATE, 없으면 INSERT
+        forecastRepo.save(e);
     }
 
 }
