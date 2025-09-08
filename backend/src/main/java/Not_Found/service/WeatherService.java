@@ -1,5 +1,9 @@
 package Not_Found.service;
 
+import Not_Found.key.WeatherForecastKey;
+import Not_Found.model.entity.WeatherForecastEntity;
+import Not_Found.repository.WeatherForecastRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
@@ -55,6 +59,38 @@ public class WeatherService {
 
         // 5. 결과 반환 (필요 시 JSON으로 포맷 가능)
         return String.format("온도: %s℃, 습도: %s%%", temperature, humidity);
+    }
+    
+    //실외데이터를 DB안에 넣기 위한 작업
+    @Autowired
+    private WeatherForecastRepository forecastRepo;
+
+    public void saveForecastSnapshot(int locId,
+                                     LocalDateTime snapshotMinute,
+                                     Double temp1h, Double temp6h, Double temp24h,
+                                     Double hum1h,  Double hum6h,  Double hum24h) {
+
+        // 분 단위로 깎은 값 -> 새 변수(ts)로 고정 (final처럼 사용)
+        LocalDateTime ts = snapshotMinute.withSecond(0).withNano(0);
+
+        // 있으면 가져오고, 없으면 새로 만들기 (람다 X)
+        WeatherForecastEntity e = forecastRepo
+                .findByKeyIdAndKeyCurrent(locId, ts)
+                .orElse(null);
+
+        if (e == null) {
+            e = new WeatherForecastEntity();
+            e.setKey(new WeatherForecastKey(locId, ts));
+        }
+
+        e.setTemp1h(temp1h);
+        e.setTemp6h(temp6h);
+        e.setTemp24h(temp24h);
+        e.setHum1h(hum1h);
+        e.setHum6h(hum6h);
+        e.setHum24h(hum24h);
+
+        forecastRepo.save(e); // 있으면 UPDATE, 없으면 INSERT
     }
 
 }

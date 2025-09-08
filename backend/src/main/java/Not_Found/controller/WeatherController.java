@@ -3,10 +3,7 @@ package Not_Found.controller;
 import Not_Found.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/weather")
@@ -31,5 +28,15 @@ public class WeatherController {
             e.printStackTrace();
             return ResponseEntity.status(500).body("날씨 데이터를 가져오는 중 오류 발생: " + e.getMessage());
         }
+    }
+
+    //실외데이터 DB에 넣기
+    @PostMapping("/forecast/test-insert")
+    public String testInsert() {
+        var now = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+        weatherService.saveForecastSnapshot(
+                1, now, 26.9, 24.8, null, 60.0, 65.0, null
+        );
+        return "ok";
     }
 }
