@@ -33,10 +33,19 @@ public class WeatherController {
     //실외데이터 DB에 넣기
     @RequestMapping(value = "/forecast/test-insert", method = {RequestMethod.GET, RequestMethod.POST})
     public String testInsert() {
-        var now = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+        var now = java.time.LocalDateTime.now()
+                .withSecond(0).withNano(0);
         weatherService.saveForecastSnapshot(
                 1, now, 26.9, 24.8, null, 60.0, 65.0, null
         );
+        return "ok";
+    }
+
+    @GetMapping("/forecast/fetch")
+    public String fetch(@RequestParam(defaultValue = "1") int locId,
+                        @RequestParam(defaultValue = "58") int nx,
+                        @RequestParam(defaultValue = "125") int ny) {
+        weatherService.fetchAndSaveForecast(locId, nx, ny);
         return "ok";
     }
 

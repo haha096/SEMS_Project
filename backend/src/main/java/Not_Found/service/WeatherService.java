@@ -2,7 +2,9 @@ package Not_Found.service;
 
 import Not_Found.dto.DustDto;
 import Not_Found.key.WeatherForecastKey;
+import Not_Found.model.entity.WeatherCurrentEntity;
 import Not_Found.model.entity.WeatherForecastEntity;
+import Not_Found.repository.WeatherCurrentRepository;
 import Not_Found.repository.WeatherForecastRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,18 +13,27 @@ import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class WeatherService {
     private final String SERVICE_KEY = "aRR3w6mDjeHK2c/K0yCtN4sBv9cfvDUUeMGrTzd3yzSdnwZEy7JXg0EWT/EaYLstuzcUPmTMotKVOpP3R3mgqQ==";
 
     private final WeatherForecastRepository forecastRepo;
+    private final WeatherCurrentRepository currentRepo;
     private final DustService dustService;
 
-    public WeatherService(WeatherForecastRepository forecastRepo, DustService dustService) {
+    public WeatherService(WeatherForecastRepository forecastRepo,
+                          WeatherCurrentRepository currentRepo,
+                          DustService dustService) {
         this.forecastRepo = forecastRepo;
+        this.currentRepo  = currentRepo;
         this.dustService = dustService;
     }
 
@@ -112,6 +123,57 @@ public class WeatherService {
         System.out.println("[DUST] pm10Value=" + d.getPm10Value() + ", pm25Value=" + d.getPm25Value());
 
         forecastRepo.save(e);
+    }
+
+
+    @Transactional
+    public void fetchAndSaveForecast(int locId, int nx, int ny) {
+        // 관측 API는 매시각 40분 후 데이터 확정 -> 40~50분 안전하게 빼줌
+        LocalDateTime base = LocalDateTime.now().minusMinutes(40);
+        String baseDate = base.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String baseTime = base.format(DateTimeFormatter.ofPattern("HH00"));
+
+        String url = String.format(
+                "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst" +
+                        "?serviceKey=%s&numOfRows=100&pageNo=1&dataType=JSON&base_date=%s&base_time=%s&nx=%d&ny=%d",
+                SERVICE_KEY, baseDate, baseTime, nx, ny
+        );
+
+        String raw = new RestTemplate().getForObject(url, String.class);
+        JSONObject json = new JSONObject(raw);
+        JSONArray items = json.getJSONObject("response")
+                .getJSONObject("body")
+                .getJSONObject("items")
+                .getJSONArray("item");
+
+        String t1h = null, reh = null;
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject it = items.getJSONObject(i);
+            String cat = it.getString("category");
+            String val = it.get("obsrValue").toString();
+            if ("T1H".equals(cat)) t1h = val;    // 기온(℃)
+            if ("REH".equals(cat)) reh = val;    // 습도(%)
+        }
+
+        // 미세먼지는 너희 DustService에서 현재값 사용
+        DustDto d = dustService.getDustData();
+        Double pm10 = toD(d.getPm10Value());
+        Double pm25 = toD(d.getPm25Value());
+
+        LocalDateTime nowMinute = LocalDateTime.now().withSecond(0).withNano(0);
+
+        var e = currentRepo.findByKeyIdAndKeyCurrent(locId, nowMinute).orElseGet(() -> {
+            var ne = new WeatherCurrentEntity();
+            ne.setKey(new Not_Found.key.WeatherCurrentKey(locId, nowMinute));
+            return ne;
+        });
+
+        e.setTemp(toD(t1h));
+        e.setHum(toD(reh));
+        e.setPm10(pm10);
+        e.setPm25(pm25);
+
+        currentRepo.save(e);
     }
 
 }
