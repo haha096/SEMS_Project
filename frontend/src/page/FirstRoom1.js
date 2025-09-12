@@ -10,7 +10,7 @@ function FirstRoom1(){
     // 온도 그래프를 보이게하도록 설계
 
     const [viewMode, setViewMode] = useState('chart');
-    const [chartUrl, setChartUrl] = useState("http://localhost:5000/chart");
+    const [chartUrl, setChartUrl] = useState("http://107.21.218.155:5000/chart");
     //표 렌더링 컴포넌트
     const [tableData, setTableData] = useState([]);
 

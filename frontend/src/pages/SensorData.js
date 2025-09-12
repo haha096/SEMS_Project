@@ -19,7 +19,7 @@ function SensorData() {
 
         // 센서 전체 데이터 요청
         useEffect(() => {
-            fetch('http://localhost:8080/sensor')  // 백엔드 API 경로
+            fetch('http://107.21.218.155:8080/sensor')  // 백엔드 API 경로
                 .then(response => response.json())
                 .then(data => {
                 console.log("백엔드 응답 구조:", data);  // 여기 확인

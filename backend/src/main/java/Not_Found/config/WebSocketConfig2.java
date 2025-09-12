@@ -38,7 +38,8 @@ public class WebSocketConfig2 implements WebSocketMessageBrokerConfigurer {
                         return () -> finalUserId;
                     }
                 })
-                .setAllowedOrigins("http://localhost:3000")
+//                .setAllowedOrigins("http://localhost:3000")
+                .setAllowedOrigins("http://sems-project.s3-website-us-east-1.amazonaws.com")
                 .withSockJS();
     }
 }

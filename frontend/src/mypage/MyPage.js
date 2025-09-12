@@ -35,7 +35,7 @@ function MyPage(){
     const [userInfo, setUserInfo] = useState(null);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/user/session', {
+        fetch('http://107.21.218.155:8080/api/user/session', {
             credentials: 'include'  // ✅ 세션 쿠키 포함
         })
             .then(res => {
