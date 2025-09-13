@@ -20,25 +20,33 @@ function Login({ handleLogin }) {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ id: id.trim(), password: password.trim() }),
-                credentials: "include"
+//                credentials: "include"
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                if (result.nickname) {
-                    // 로그인 처리
-                    handleLogin(result.nickname, result.isAdmin);
+                 // 서버가 응답한 데이터에 토큰이 있는지 확인합니다.
+                 if (result.token) {
+                     // ✅ 1. 서버에서 받은 토큰을 localStorage에 저장합니다.
+                     localStorage.setItem("token", result.token);
 
-                    // localStorage에 저장
-                    localStorage.setItem("userInfo", JSON.stringify({
-                        nickname: result.nickname,
-                        isAdmin: result.isAdmin
-                    }));
+                     // ✅ 2. 닉네임, 이메일, 관리자 여부 등 사용자 정보도 함께 저장합니다.
+                     //     (서버 응답에 토큰 외에 이 정보들이 포함되어 있다는 가정 하에)
+                     localStorage.setItem("userInfo", JSON.stringify({
+                         nickname: result.nickname,
+                         email: result.email, // 이메일 정보도 추가
+                         isAdmin: result.isAdmin
+                     }));
+
+                     // 로그인 상태를 앱 전반에 반영하기 위해 상위 컴포넌트의 함수를 호출합니다.
+                     // 이 부분은 기존 코드를 활용하면 됩니다.
+                     handleLogin(result.nickname, result.isAdmin);
 
                     navigate("/");
                 } else {
-                    setErrorMessage("로그인 성공했지만 닉네임이 없습니다.");
+                // 서버가 토큰을 보내주지 않았을 경우의 예외 처리
+                    setErrorMessage("로그인에 성공했지만 토큰을 받지 못했습니다.");
                 }
             } else {
                 setErrorMessage(result.message || "아이디 또는 비밀번호가 틀렸습니다.");

@@ -33,14 +33,32 @@ function MyPage(){
     // }
 
     const [userInfo, setUserInfo] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        // ✅ 1. localStorage에서 토큰을 가져옵니다.
+        const token = localStorage.getItem("token");
+
+        // ✅ 2. 토큰이 없으면 로그인 페이지로 이동합니다.
+        if (!token) {
+            alert("로그인 후 이용해 주세요.");
+            navigate("/login");
+            return;
+        }
+
+        // ✅ 3. 서버에 토큰을 포함시켜 요청을 보냅니다.
         fetch('http://107.21.218.155:8080/api/user/session', {
-            credentials: 'include'  // ✅ 세션 쿠키 포함
+           headers: {
+                "Authorization": `Bearer ${token}`
+            }
         })
             .then(res => {
                 if (!res.ok) {
-                    throw new Error("로그인 정보가 없습니다.");
+                    // 토큰이 유효하지 않거나 만료된 경우이므로
+                    // 로그인 페이지로 다시 보냅니다.
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userInfo");
+                    throw new Error("로그인 정보가 유효하지 않습니다.");
                 }
                 return res.json();
             })

@@ -3,6 +3,9 @@ package Not_Found.controller;
 import Not_Found.model.dto.UserDTO;
 import Not_Found.model.entity.User;
 import Not_Found.service.UserService;
+import Not_Found.util.JwtUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody UserDTO userDTO) {
@@ -31,25 +37,23 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO userDTO, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
         Optional<User> userOpt = userService.getUserIfValid(userDTO.getId(), userDTO.getPassword());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            // JWT 토큰 생성 (email 추가)
+            String token = jwtUtil.generateToken(user.getId(), user.getNickname(), user.getEmail(), user.getIsAdmin());
 
-            session.setAttribute("userId", user.getId());
-            session.setAttribute("nickname", user.getNickname());
-            session.setAttribute("email", user.getEmail());
-            session.setAttribute("isAdmin", user.getIsAdmin());
-
-            System.out.println("로그인 세션 ID: " + session.getId());
-            System.out.println("로그인 저장된 userId: " + session.getAttribute("userId"));
-            System.out.println("가져온 User 정보: " + user);
+            // ✅ 토큰 정보 출력 (세션 정보 대신)
+            System.out.println("생성된 JWT 토큰: " + token);
 
             Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
             response.put("userId", user.getId());
             response.put("nickname", user.getNickname());
             response.put("email", user.getEmail());
             response.put("isAdmin", user.getIsAdmin());
+
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> error = new HashMap<>();
@@ -60,19 +64,18 @@ public class UserController {
 
     //로그인하고 내정보 페이지에 정보를 넣기 위한 GetMapping
     @GetMapping("/session")
-    public ResponseEntity<?> checkSession(HttpSession session) {
-        Object userId = session.getAttribute("userId");
-        System.out.println("세션 확인 - userId: " + userId);
-        System.out.println("저장된 userId: " + session.getAttribute("userId"));
+    public ResponseEntity<?> checkSession(@RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7); // "Bearer " 제거
+            Claims claims = jwtUtil.parseToken(jwtToken);
 
-        if (userId != null) {
             Map<String, Object> response = new HashMap<>();
-            response.put("userId", userId);
-            response.put("nickname", session.getAttribute("nickname"));
-            response.put("email", session.getAttribute("email"));
-            response.put("isAdmin", session.getAttribute("isAdmin"));
+            response.put("userId", claims.get("userId"));
+            response.put("nickname", claims.get("nickname"));
+            response.put("email", claims.get("email"));
+            response.put("isAdmin", claims.get("isAdmin"));
             return ResponseEntity.ok(response);
-        } else {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 상태가 아닙니다.");
         }
     }
