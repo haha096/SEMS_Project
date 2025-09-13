@@ -30,7 +30,7 @@ public class WeatherFetchScheduler {
         try {
             LocalDateTime now = LocalDateTime.now();
             System.out.println("[WEATHER] fetch start at " + now);
-            weatherService.fetchAndSaveForecast(LOC_ID, NX, NY);
+            weatherService.fetchAndSaveCurrent(LOC_ID, NX, NY);
             System.out.println("[WEATHER] fetch done at " + LocalDateTime.now());
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,16 +1,29 @@
 package Not_Found.model.entity;
 
-import Not_Found.key.WeatherCurrentKey;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Table(name = "weather_current")
-@Data @NoArgsConstructor
-public class WeatherCurrentEntity {
+import java.time.LocalDateTime;
 
-    @EmbeddedId
-    private WeatherCurrentKey key;
+@Entity
+@Table(
+        name = "weather_current",
+        uniqueConstraints = @UniqueConstraint(name="uq_loc_time", columnNames={"loc_id","observed_at"})
+)
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class WeatherCurrentEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name="loc_id", nullable=false)
+    private Integer locId;
+
+    @Column(name="observed_at", nullable=false)
+    private LocalDateTime observedAt;
 
     private Double temp;
     private Double hum;

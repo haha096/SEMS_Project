@@ -45,7 +45,7 @@ public class WeatherController {
     public String fetch(@RequestParam(defaultValue = "1") int locId,
                         @RequestParam(defaultValue = "58") int nx,
                         @RequestParam(defaultValue = "125") int ny) {
-        weatherService.fetchAndSaveForecast(locId, nx, ny);
+        weatherService.fetchAndSaveCurrent(locId, nx, ny);
         return "ok";
     }
 

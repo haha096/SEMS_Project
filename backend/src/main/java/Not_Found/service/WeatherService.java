@@ -7,8 +7,10 @@ import Not_Found.model.entity.WeatherForecastEntity;
 import Not_Found.repository.WeatherCurrentRepository;
 import Not_Found.repository.WeatherForecastRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,16 +35,19 @@ public class WeatherService {
                           WeatherCurrentRepository currentRepo,
                           DustService dustService) {
         this.forecastRepo = forecastRepo;
-        this.currentRepo  = currentRepo;
+        this.currentRepo = currentRepo;
         this.dustService = dustService;
     }
 
-    private Double toD(String s){
+    private Double toD(String s) {
         if (s == null) return null;
         s = s.trim();
         if (s.isEmpty() || s.equals("-")) return null;  // ← 결측 처리
-        try { return Double.valueOf(s); }
-        catch (Exception e){ return null; }
+        try {
+            return Double.valueOf(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getWeatherData(int nx, int ny) {
@@ -95,7 +100,7 @@ public class WeatherService {
     public void saveForecastSnapshot(int locId,
                                      LocalDateTime snapshotMinute,
                                      Double temp1h, Double temp6h, Double temp24h,
-                                     Double hum1h,  Double hum6h,  Double hum24h) {
+                                     Double hum1h, Double hum6h, Double hum24h) {
 
         // 분 단위로 깎은 값 -> 새 변수(ts)로 고정 (final처럼 사용)
         LocalDateTime ts = snapshotMinute.withSecond(0).withNano(0);
@@ -107,18 +112,26 @@ public class WeatherService {
         });
 
         // 온/습 저장
-        e.setTemp1h(temp1h); e.setTemp6h(temp6h); e.setTemp24h(temp24h);
-        e.setHum1h(hum1h);   e.setHum6h(hum6h);   e.setHum24h(hum24h);
+        e.setTemp1h(temp1h);
+        e.setTemp6h(temp6h);
+        e.setTemp24h(temp24h);
+        e.setHum1h(hum1h);
+        e.setHum6h(hum6h);
+        e.setHum24h(hum24h);
 
         // ❗현재 미세먼지를 임시 예측으로 복사
         DustDto d = dustService.getDustData();   // 네가 이미 만든 서비스
         Double pm10 = toD(d.getPm10Value());
         Double pm25 = toD(d.getPm25Value());
         if (pm10 != null) {
-            e.setPm10_1h(pm10); e.setPm10_6h(pm10); e.setPm10_24h(pm10);
+            e.setPm10_1h(pm10);
+            e.setPm10_6h(pm10);
+            e.setPm10_24h(pm10);
         }
         if (pm25 != null) {
-            e.setPm25_1h(pm25); e.setPm25_6h(pm25); e.setPm25_24h(pm25);
+            e.setPm25_1h(pm25);
+            e.setPm25_6h(pm25);
+            e.setPm25_24h(pm25);
         }
         System.out.println("[DUST] pm10Value=" + d.getPm10Value() + ", pm25Value=" + d.getPm25Value());
 
@@ -127,8 +140,8 @@ public class WeatherService {
 
 
     @Transactional
-    public void fetchAndSaveForecast(int locId, int nx, int ny) {
-        // 관측 API는 매시각 40분 후 데이터 확정 -> 40~50분 안전하게 빼줌
+    public void fetchAndSaveCurrent(int locId, int nx, int ny) {
+        // 1) 기상청 실황 호출(기존 그대로)
         LocalDateTime base = LocalDateTime.now().minusMinutes(40);
         String baseDate = base.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String baseTime = base.format(DateTimeFormatter.ofPattern("HH00"));
@@ -155,25 +168,27 @@ public class WeatherService {
             if ("REH".equals(cat)) reh = val;    // 습도(%)
         }
 
-        // 미세먼지는 너희 DustService에서 현재값 사용
+        // 2) 미세먼지 (기존 그대로)
         DustDto d = dustService.getDustData();
         Double pm10 = toD(d.getPm10Value());
         Double pm25 = toD(d.getPm25Value());
 
-        LocalDateTime nowMinute = LocalDateTime.now().withSecond(0).withNano(0);
+        // 3) 분 단위 정규화된 타임스탬프
+        LocalDateTime ts = LocalDateTime.now().withSecond(0).withNano(0);
 
-        var e = currentRepo.findByKeyIdAndKeyCurrent(locId, nowMinute).orElseGet(() -> {
-            var ne = new WeatherCurrentEntity();
-            ne.setKey(new Not_Found.key.WeatherCurrentKey(locId, nowMinute));
-            return ne;
-        });
+        // 4) (loc_id, observed_at)로 UPSERT
+        var e = currentRepo.findByLocIdAndObservedAt(locId, ts)
+                .orElseGet(() -> WeatherCurrentEntity.builder()
+                        .locId(locId)
+                        .observedAt(ts)
+                        .build());
 
         e.setTemp(toD(t1h));
         e.setHum(toD(reh));
         e.setPm10(pm10);
         e.setPm25(pm25);
 
-        currentRepo.save(e);
+        currentRepo.save(e); // UNIQUE(loc_id, observed_at) 덕분에 같은 분엔 갱신처럼 동작
     }
 
 }
