@@ -14,6 +14,9 @@ import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.http.*;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.time.Duration;
@@ -257,6 +260,62 @@ public class WeatherService {
         }
 
         return new java.util.ArrayList<>(map.values()); // ts 오름차순
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String,Object>> callIndoorForecast(int locId, int days, int horizonMinutes) {
+
+        // 1) 실내+실외 병합 시계열 만들기 (이미 만들어둔 메서드 사용)
+        var series = buildIndoorOutdoorSeries(locId, days);
+
+        // 2) FastAPI 요청 바디
+        var payload = new java.util.HashMap<String,Object>();
+        payload.put("freq", "10min");
+        payload.put("horizon_minutes", horizonMinutes);  // 60=1h, 360=6h, 1440=24h
+        payload.put("target", "in_temp");                // 실내온도 예측
+        payload.put("series", series);
+
+        // 3) POST 호출
+        String url = "http://localhost:8001/forecast/gbdt";
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        var req = new HttpEntity<>(payload, headers);
+
+        var rt = new RestTemplate();
+        var resp = rt.exchange(
+                url,
+                HttpMethod.POST,
+                req,
+                new ParameterizedTypeReference<java.util.List<java.util.Map<String,Object>>>() {}
+        );
+
+        return resp.getBody(); // 예: [{ts:"...", yhat:24.3}, ...]
+    }
+
+
+    // 예측 결과를 weather_forecast 테이블에 저장
+    @org.springframework.transaction.annotation.Transactional
+    public void runIndoorForecastAndSave(int locId, int horizonMinutes) {
+        // 최근 1일 데이터로 학습 입력 구성
+        var preds = callIndoorForecast(locId, 1, horizonMinutes);
+        if (preds == null || preds.isEmpty()) return;
+
+        // 10분 간격 인덱스 → 1h/6h/24h 포인트 추출
+        java.util.function.IntFunction<Double> yAt = (idx) -> {
+            if (idx < preds.size()) {
+                Object v = preds.get(idx).get("yhat");
+                return (v == null) ? null : Double.valueOf(v.toString());
+            }
+            return null;
+        };
+        Double temp1h  = yAt.apply(6);    //  6 * 10min = 1시간 후
+        Double temp6h  = yAt.apply(36);   // 36 * 10min = 6시간 후
+        Double temp24h = yAt.apply(144);  // 144 * 10min = 24시간 후
+
+        var now = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+
+        // 습도 예측은 아직 안 하므로 hum* 은 null로 저장
+        saveForecastSnapshot(locId, now, temp1h, temp6h, temp24h, null, null, null);
     }
 
 }

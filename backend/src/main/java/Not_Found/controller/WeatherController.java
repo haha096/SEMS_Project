@@ -60,6 +60,28 @@ public class WeatherController {
         return weatherService.buildSeriesForForecast(locId, days);
     }
 
+    // 미리보기: FastAPI 예측 결과(JSON)만 확인
+    @GetMapping("/forecast/preview")
+    public java.util.List<java.util.Map<String,Object>> preview(
+            @RequestParam(defaultValue = "1") int locId,
+            @RequestParam(defaultValue = "60") int horizon   // 60분(=1시간) 예측
+    ) {
+        return weatherService.callIndoorForecast(locId, 1, horizon);
+    }
+
+    // 저장 실행: 예측해서 weather_forecast 테이블에 저장
+    @GetMapping("/forecast/run-indoor")
+    public String runIndoor(
+            @RequestParam(defaultValue = "1") int locId,
+            @RequestParam(defaultValue = "1440") int horizon // 24시간 예측 저장
+    ) {
+        weatherService.runIndoorForecastAndSave(locId, horizon);
+        return "ok";
+    }
+
+
+
+
 
 
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
