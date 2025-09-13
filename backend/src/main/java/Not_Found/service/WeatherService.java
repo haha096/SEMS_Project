@@ -7,25 +7,23 @@ import Not_Found.model.entity.WeatherForecastEntity;
 import Not_Found.repository.WeatherCurrentRepository;
 import Not_Found.repository.WeatherForecastRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class WeatherService {
     private final String SERVICE_KEY = "aRR3w6mDjeHK2c/K0yCtN4sBv9cfvDUUeMGrTzd3yzSdnwZEy7JXg0EWT/EaYLstuzcUPmTMotKVOpP3R3mgqQ==";
+
 
     private final WeatherForecastRepository forecastRepo;
     private final WeatherCurrentRepository currentRepo;
@@ -141,18 +139,29 @@ public class WeatherService {
 
     @Transactional
     public void fetchAndSaveCurrent(int locId, int nx, int ny) {
-        // 1) 기상청 실황 호출(기존 그대로)
         LocalDateTime base = LocalDateTime.now().minusMinutes(40);
         String baseDate = base.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String baseTime = base.format(DateTimeFormatter.ofPattern("HH00"));
 
-        String url = String.format(
-                "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst" +
-                        "?serviceKey=%s&numOfRows=100&pageNo=1&dataType=JSON&base_date=%s&base_time=%s&nx=%d&ny=%d",
-                SERVICE_KEY, baseDate, baseTime, nx, ny
-        );
+        // 1) URI 빌드
+        URI uri = UriComponentsBuilder
+                .fromHttpUrl("https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst")
+                .queryParam("serviceKey", SERVICE_KEY)
+                .queryParam("numOfRows", 100)
+                .queryParam("pageNo", 1)
+                .queryParam("dataType", "JSON")
+                .queryParam("base_date", baseDate)
+                .queryParam("base_time", baseTime)
+                .queryParam("nx", nx)
+                .queryParam("ny", ny)
+                .encode()     // SERVICE_KEY가 '원본'이면 .encode().build(); 이미 인코딩된 키면 .build(true)
+                .build()
+                .toUri();
 
-        String raw = new RestTemplate().getForObject(url, String.class);
+        // 2) 호출 시 uri 사용!  (기존의 String url 변수는 완전히 삭제)
+        String raw = new RestTemplate().getForObject(uri, String.class);
+
+        // 3) 이하 JSON 파싱/DB 저장은 그대로
         JSONObject json = new JSONObject(raw);
         JSONArray items = json.getJSONObject("response")
                 .getJSONObject("body")
@@ -164,31 +173,41 @@ public class WeatherService {
             JSONObject it = items.getJSONObject(i);
             String cat = it.getString("category");
             String val = it.get("obsrValue").toString();
-            if ("T1H".equals(cat)) t1h = val;    // 기온(℃)
-            if ("REH".equals(cat)) reh = val;    // 습도(%)
+            if ("T1H".equals(cat)) t1h = val;
+            if ("REH".equals(cat)) reh = val;
         }
 
-        // 2) 미세먼지 (기존 그대로)
         DustDto d = dustService.getDustData();
         Double pm10 = toD(d.getPm10Value());
         Double pm25 = toD(d.getPm25Value());
 
-        // 3) 분 단위 정규화된 타임스탬프
         LocalDateTime ts = LocalDateTime.now().withSecond(0).withNano(0);
 
-        // 4) (loc_id, observed_at)로 UPSERT
         var e = currentRepo.findByLocIdAndObservedAt(locId, ts)
                 .orElseGet(() -> WeatherCurrentEntity.builder()
-                        .locId(locId)
-                        .observedAt(ts)
-                        .build());
+                        .locId(locId).observedAt(ts).build());
 
         e.setTemp(toD(t1h));
         e.setHum(toD(reh));
         e.setPm10(pm10);
         e.setPm25(pm25);
 
-        currentRepo.save(e); // UNIQUE(loc_id, observed_at) 덕분에 같은 분엔 갱신처럼 동작
+        currentRepo.save(e);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String,Object>> buildSeriesForForecast(int locId, int days){
+        var since = LocalDateTime.now().minusDays(days).withSecond(0).withNano(0);
+        var rows = currentRepo.findByLocIdAndObservedAtAfterOrderByObservedAtAsc(locId, since);
+        var list = new java.util.ArrayList<Map<String,Object>>();
+        for (var r : rows) {
+            var m = new java.util.HashMap<String,Object>();
+            m.put("ts", r.getObservedAt().toString()); // ISO8601 문자열 (예: 2025-09-13T15:01:00)
+            m.put("out_temp", r.getTemp());
+            m.put("out_hum",  r.getHum());
+            list.add(m);
+        }
+        return list;
     }
 
 }

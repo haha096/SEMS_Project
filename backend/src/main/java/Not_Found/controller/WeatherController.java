@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/weather")
 public class WeatherController {
@@ -47,6 +50,14 @@ public class WeatherController {
                         @RequestParam(defaultValue = "125") int ny) {
         weatherService.fetchAndSaveCurrent(locId, nx, ny);
         return "ok";
+    }
+
+    @GetMapping(value = "/current/series", produces = "application/json")
+    public List<Map<String,Object>> currentSeries(
+            @RequestParam(defaultValue = "1") int locId,
+            @RequestParam(defaultValue = "3") int days
+    ) {
+        return weatherService.buildSeriesForForecast(locId, days);
     }
 
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
