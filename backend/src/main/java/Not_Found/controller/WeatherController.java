@@ -60,6 +60,8 @@ public class WeatherController {
         return weatherService.buildSeriesForForecast(locId, days);
     }
 
+
+
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
     @Autowired Not_Found.repository.WeatherForecastRepository wfRepo;
 
@@ -87,4 +89,12 @@ public class WeatherController {
     // 3) 저장된 내용 보기
     @GetMapping("/forecast/peek5")
     public Object peek5() { return wfRepo.findAll().stream().limit(5).toList(); }
+
+    @GetMapping(value="/series/indoor-outdoor", produces="application/json")
+    public java.util.List<java.util.Map<String,Object>> seriesIO(
+            @RequestParam(defaultValue="1") int locId,
+            @RequestParam(defaultValue="1") int days
+    ) {
+        return weatherService.buildIndoorOutdoorSeries(locId, days);
+    }
 }

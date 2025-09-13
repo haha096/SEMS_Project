@@ -6,6 +6,7 @@ import Not_Found.model.entity.WeatherCurrentEntity;
 import Not_Found.model.entity.WeatherForecastEntity;
 import Not_Found.repository.WeatherCurrentRepository;
 import Not_Found.repository.WeatherForecastRepository;
+import Not_Found.repository.EnvironmentDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +29,16 @@ public class WeatherService {
     private final WeatherForecastRepository forecastRepo;
     private final WeatherCurrentRepository currentRepo;
     private final DustService dustService;
+    private final EnvironmentDataRepository environmentDataRepository;
 
     public WeatherService(WeatherForecastRepository forecastRepo,
                           WeatherCurrentRepository currentRepo,
-                          DustService dustService) {
+                          DustService dustService,
+                          EnvironmentDataRepository environmentDataRepository) {
         this.forecastRepo = forecastRepo;
         this.currentRepo = currentRepo;
         this.dustService = dustService;
+        this.environmentDataRepository = environmentDataRepository;
     }
 
     private Double toD(String s) {
@@ -208,6 +212,51 @@ public class WeatherService {
             list.add(m);
         }
         return list;
+    }
+
+    //실외데이터와 실내데이터를 가지고 예측데이터 생성
+    private static LocalDateTime bucket10(LocalDateTime t) {
+        int m = (t.getMinute() / 10) * 10;
+        return t.withSecond(0).withNano(0).withMinute(m);
+    }
+
+    // 실내+실외 시리즈 합치기 (FastAPI에 보낼 입력 생성)
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String,Object>> buildIndoorOutdoorSeries(int locId, int days){
+        var since = java.time.LocalDateTime.now().minusDays(days).withSecond(0).withNano(0);
+
+        // 실외: weather_current
+        var outRows = currentRepo.findByLocIdAndObservedAtAfterOrderByObservedAtAsc(locId, since);
+
+        // 실내: environment_data (기간 조회)
+        var start = since;
+        var end   = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+        var inRows = environmentDataRepository.findAllByTimestampBetween(start, end);
+
+        var map = new java.util.TreeMap<java.time.LocalDateTime, java.util.Map<String,Object>>();
+
+        // 실외 넣기
+        for (var r : outRows) {
+            var ts = bucket10(r.getObservedAt());
+            var m = map.computeIfAbsent(ts, k -> new java.util.HashMap<>());
+            m.put("ts", ts.toString());
+            m.put("out_temp", r.getTemp());
+            m.put("out_hum",  r.getHum());
+        }
+
+        // 실내 넣기 (avg_* 우선, 없으면 raw 사용)
+        for (var e : inRows) {
+            var ts = bucket10(e.getTimestamp());
+            var m = map.computeIfAbsent(ts, k -> new java.util.HashMap<>());
+            m.put("ts", ts.toString());
+            Double inTemp = (e.getAvgTemperature() != null) ? e.getAvgTemperature() : e.getTemperature();
+            Double inHum  = (e.getAvgHumidity()    != null) ? e.getAvgHumidity()    : e.getHumidity();
+            m.put("in_temp", inTemp);
+            m.put("in_hum",  inHum);
+            // (dust도 쓰고 싶으면 여기서 m.put("in_dust", ...) 등으로 추가 가능)
+        }
+
+        return new java.util.ArrayList<>(map.values()); // ts 오름차순
     }
 
 }
