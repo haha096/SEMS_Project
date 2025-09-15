@@ -15,8 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.*;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.time.Duration;
@@ -125,20 +123,15 @@ public class WeatherService {
         e.setHum24h(hum24h);
 
         // ❗현재 미세먼지를 임시 예측으로 복사
-        DustDto d = dustService.getDustData();   // 네가 이미 만든 서비스
-        Double pm10 = toD(d.getPm10Value());
-        Double pm25 = toD(d.getPm25Value());
-        if (pm10 != null) {
-            e.setPm10_1h(pm10);
-            e.setPm10_6h(pm10);
-            e.setPm10_24h(pm10);
+        try {
+            DustDto d = dustService.getDustData();
+            Double pm10 = toD(d.getPm10Value());
+            Double pm25 = toD(d.getPm25Value());
+            if (pm10 != null) { e.setPm10_1h(pm10); e.setPm10_6h(pm10); e.setPm10_24h(pm10); }
+            if (pm25 != null) { e.setPm25_1h(pm25); e.setPm25_6h(pm25); e.setPm25_24h(pm25); }
+        } catch (Exception ex) {
+            System.out.println("[DUST] 호출 실패 - 예보 저장은 계속 진행: " + ex.getMessage());
         }
-        if (pm25 != null) {
-            e.setPm25_1h(pm25);
-            e.setPm25_6h(pm25);
-            e.setPm25_24h(pm25);
-        }
-        System.out.println("[DUST] pm10Value=" + d.getPm10Value() + ", pm25Value=" + d.getPm25Value());
 
         forecastRepo.save(e);
     }
@@ -223,6 +216,33 @@ public class WeatherService {
         return t.withSecond(0).withNano(0).withMinute(m);
     }
 
+    // 예측 리스트에서 target 시각과 가장 가까운 yhat을 뽑아오기
+    private Double pickNearestYhat(java.util.List<java.util.Map<String,Object>> preds,
+                                   LocalDateTime target) {
+        if (preds == null || preds.isEmpty()) return null;
+        var fmt = java.time.format.DateTimeFormatter.ISO_DATE_TIME;
+
+        Double bestVal = null;
+        long bestDiff = Long.MAX_VALUE;
+
+        for (var p : preds) {
+            Object tsObj = p.get("ts");
+            Object yObj  = p.get("yhat");
+            if (tsObj == null || yObj == null) continue;
+
+            LocalDateTime ts;
+            try { ts = LocalDateTime.parse(tsObj.toString(), fmt); }
+            catch (Exception ignore) { continue; }
+
+            long diff = Math.abs(java.time.Duration.between(target, ts).toMinutes());
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                try { bestVal = Double.valueOf(yObj.toString()); } catch (Exception ignore) {}
+            }
+        }
+        return bestVal;
+    }
+
     // 실내+실외 시리즈 합치기 (FastAPI에 보낼 입력 생성)
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public java.util.List<java.util.Map<String,Object>> buildIndoorOutdoorSeries(int locId, int days){
@@ -256,66 +276,101 @@ public class WeatherService {
             Double inHum  = (e.getAvgHumidity()    != null) ? e.getAvgHumidity()    : e.getHumidity();
             m.put("in_temp", inTemp);
             m.put("in_hum",  inHum);
-            // (dust도 쓰고 싶으면 여기서 m.put("in_dust", ...) 등으로 추가 가능)
         }
 
         return new java.util.ArrayList<>(map.values()); // ts 오름차순
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public java.util.List<java.util.Map<String,Object>> callIndoorForecast(int locId, int days, int horizonMinutes) {
-
-        // 1) 실내+실외 병합 시계열 만들기 (이미 만들어둔 메서드 사용)
-        var series = buildIndoorOutdoorSeries(locId, days);
-
-        // 2) FastAPI 요청 바디
-        var payload = new java.util.HashMap<String,Object>();
-        payload.put("freq", "10min");
-        payload.put("horizon_minutes", horizonMinutes);  // 60=1h, 360=6h, 1440=24h
-        payload.put("target", "in_temp");                // 실내온도 예측
-        payload.put("series", series);
-
-        // 3) POST 호출
-        String url = "http://localhost:8001/forecast/gbdt";
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        var req = new HttpEntity<>(payload, headers);
-
-        var rt = new RestTemplate();
-        var resp = rt.exchange(
-                url,
-                HttpMethod.POST,
-                req,
-                new ParameterizedTypeReference<java.util.List<java.util.Map<String,Object>>>() {}
-        );
-
-        return resp.getBody(); // 예: [{ts:"...", yhat:24.3}, ...]
-    }
-
-
-    // 예측 결과를 weather_forecast 테이블에 저장
+    /** 실내(in_temp/in_hum) 예측을 FastAPI에 요청해서 weather_forecast에 저장 */
     @org.springframework.transaction.annotation.Transactional
     public void runIndoorForecastAndSave(int locId, int horizonMinutes) {
-        // 최근 1일 데이터로 학습 입력 구성
-        var preds = callIndoorForecast(locId, 1, horizonMinutes);
-        if (preds == null || preds.isEmpty()) return;
+        // 1) 예측 입력 시계열(실외+실내) 만들기 (최근 1~3일 정도가 무난)
+        var series = buildIndoorOutdoorSeries(locId, 3);
+        if (series.isEmpty()) {
+            System.out.println("[FORECAST] 입력 시리즈가 비어있음");
+            return;
+        }
 
-        // 10분 간격 인덱스 → 1h/6h/24h 포인트 추출
-        java.util.function.IntFunction<Double> yAt = (idx) -> {
-            if (idx < preds.size()) {
-                Object v = preds.get(idx).get("yhat");
-                return (v == null) ? null : Double.valueOf(v.toString());
-            }
-            return null;
-        };
-        Double temp1h  = yAt.apply(6);    //  6 * 10min = 1시간 후
-        Double temp6h  = yAt.apply(36);   // 36 * 10min = 6시간 후
-        Double temp24h = yAt.apply(144);  // 144 * 10min = 24시간 후
+        // 2) FastAPI 호출 준비
+        var rt = new org.springframework.web.client.RestTemplate();
+        var headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
 
-        var now = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+        String url = "http://localhost:8001/forecast/gbdt";
 
-        // 습도 예측은 아직 안 하므로 hum* 은 null로 저장
-        saveForecastSnapshot(locId, now, temp1h, temp6h, temp24h, null, null, null);
+        // 2-1) 온도(in_temp) 예측
+        var bodyTemp = new java.util.HashMap<String,Object>();
+        bodyTemp.put("freq", "10min");
+        bodyTemp.put("horizon_minutes", horizonMinutes);   // 60=1h, 360=6h, 1440=24h
+        bodyTemp.put("target", "in_temp");
+        bodyTemp.put("series", series);
+        var reqTemp = new org.springframework.http.HttpEntity<>(bodyTemp, headers);
+        var respTemp = rt.postForEntity(url, reqTemp, java.util.List.class);
+        @SuppressWarnings("unchecked")
+        var predsTemp = (java.util.List<java.util.Map<String,Object>>) respTemp.getBody();
+
+        // 2-2) 습도(in_hum) 예측
+        var bodyHum = new java.util.HashMap<String,Object>();
+        bodyHum.put("freq", "10min");
+        bodyHum.put("horizon_minutes", horizonMinutes);
+        bodyHum.put("target", "in_hum");
+        bodyHum.put("series", series);
+        var reqHum = new org.springframework.http.HttpEntity<>(bodyHum, headers);
+        var respHum = rt.postForEntity(url, reqHum, java.util.List.class);
+        @SuppressWarnings("unchecked")
+        var predsHum = (java.util.List<java.util.Map<String,Object>>) respHum.getBody();
+
+        // 3) 현재 10분 버킷 기준으로 +1h/+6h/+24h 값을 뽑기
+        var latestOpt = currentRepo.findTopByLocIdOrderByObservedAtDesc(locId);
+        var base = latestOpt
+                .map(e -> bucket10(e.getObservedAt()))
+                .orElse(bucket10(java.time.LocalDateTime.now()));
+        var t1h  = pickNearestYhat(predsTemp, base.plusHours(1));
+        var t6h  = pickNearestYhat(predsTemp, base.plusHours(6));
+        var t24h = pickNearestYhat(predsTemp, base.plusHours(24));
+        var h1h  = pickNearestYhat(predsHum,  base.plusHours(1));
+        var h6h  = pickNearestYhat(predsHum,  base.plusHours(6));
+        var h24h = pickNearestYhat(predsHum,  base.plusHours(24));
+
+        // 4) weather_forecast에 저장 (미세먼지는 기존 로직대로 서비스 내에서 채워짐)
+        saveForecastSnapshot(locId, base, t1h, t6h, t24h, h1h, h6h, h24h);
+
+        System.out.println("[FORECAST] base=" + base +
+                " t1h=" + t1h + " t6h=" + t6h + " t24h=" + t24h +
+                " h1h=" + h1h + " h6h=" + h6h + " h24h=" + h24h);
+
+        if (t1h==null && t6h==null && t24h==null && h1h==null && h6h==null && h24h==null) {
+            System.out.println("[FORECAST] 모두 null → 저장 스킵");
+            return;
+        }
+    }
+
+    // FastAPI에 예측을 요청해서 "미래 실내값 리스트"만 돌려주는 미리보기용 (DB 저장 안 함)
+    public java.util.List<java.util.Map<String,Object>> callIndoorForecast(int locId, int horizonMinutes) {
+        // 1) 실내+실외 시계열
+        var series = buildIndoorOutdoorSeries(locId, 3); // 최근 3일; 필요시 조정
+        // * FastAPI 쪽에 naive fallback이 있으므로 series 길이가 짧아도 그대로 보냄
+
+        // 2) 요청 바디
+        var body = new java.util.HashMap<String,Object>();
+        body.put("freq", "10min");
+        body.put("horizon_minutes", horizonMinutes);
+        body.put("target", "in_temp"); // 실내 온도 예측; 습도면 "in_hum"
+        body.put("series", series);
+
+        // 3) HTTP 호출
+        var headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        var entity = new org.springframework.http.HttpEntity<>(body, headers);
+
+        var rt = new org.springframework.web.client.RestTemplate();
+        @SuppressWarnings("unchecked")
+        var preds = (java.util.List<java.util.Map<String,Object>>) rt.postForObject(
+                "http://localhost:8001/forecast/gbdt",
+                entity,
+                java.util.List.class
+        );
+        return (preds == null) ? java.util.List.of() : preds;
     }
 
 }
