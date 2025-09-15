@@ -216,6 +216,10 @@ public class WeatherService {
         return t.withSecond(0).withNano(0).withMinute(m);
     }
 
+    private static LocalDateTime bucket1(LocalDateTime t) {
+        return t.withSecond(0).withNano(0);
+    }
+
     // 예측 리스트에서 target 시각과 가장 가까운 yhat을 뽑아오기
     private Double pickNearestYhat(java.util.List<java.util.Map<String,Object>> preds,
                                    LocalDateTime target) {
@@ -323,8 +327,8 @@ public class WeatherService {
         // 3) 현재 10분 버킷 기준으로 +1h/+6h/+24h 값을 뽑기
         var latestOpt = currentRepo.findTopByLocIdOrderByObservedAtDesc(locId);
         var base = latestOpt
-                .map(e -> bucket10(e.getObservedAt()))
-                .orElse(bucket10(java.time.LocalDateTime.now()));
+                .map(e -> bucket1(e.getObservedAt()))
+                .orElse(bucket1(java.time.LocalDateTime.now()));
         var t1h  = pickNearestYhat(predsTemp, base.plusHours(1));
         var t6h  = pickNearestYhat(predsTemp, base.plusHours(6));
         var t24h = pickNearestYhat(predsTemp, base.plusHours(24));
