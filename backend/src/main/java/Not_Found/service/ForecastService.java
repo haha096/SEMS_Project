@@ -24,6 +24,35 @@ public class ForecastService {
     private final WeatherCurrentRepository currentRepo;
     private final EnvironmentDataRepository environmentDataRepository;
     private final DustService dustService;
+    private final RestTemplate restTemplate;
+
+    private List<Map<String,Object>> callFastApi(
+            List<Map<String,Object>> series, int horizon, String target) {
+        try {
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            var body = Map.of(
+                    "freq", "10min",
+                    "horizon_minutes", horizon,
+                    "target", target,
+                    "series", series
+            );
+            var url = "http://localhost:8001/forecast/gbdt";
+            ResponseEntity<List> resp =
+                    restTemplate.postForEntity(url, new HttpEntity<>(body, headers), List.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String,Object>> out = (resp.getBody()==null)? List.of() : resp.getBody();
+            return out;
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            System.out.println("[FORECAST] ⚠️ 파이썬 예측 서버(8001)에 연결할 수 없음. 이번 분 생략. " + e.getMessage());
+            return null; // 서버 다운: null로 신호
+        } catch (org.springframework.web.client.RestClientException e) {
+            System.out.println("[FORECAST] ⚠️ 파이썬 호출 실패. 이번 분 생략. " + e.getMessage());
+            return null;
+        }
+    }
+
+
 
     private Double toD(String s) {
         if (s == null) return null;
@@ -128,94 +157,69 @@ public class ForecastService {
     public List<Map<String,Object>> callIndoorForecast(int locId, int horizonMinutes) {
         var series = buildIndoorOutdoorSeries(locId, 3);
 
-        var body = new HashMap<String,Object>();
-        body.put("freq", "10min");
-        body.put("horizon_minutes", horizonMinutes);
-        body.put("target", "in_temp"); // 습도 확인하려면 "in_hum"
-        body.put("series", series);
-
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        var entity = new HttpEntity<>(body, headers);
-
-        var rt = new RestTemplate();
-        @SuppressWarnings("unchecked")
-        var preds = (List<Map<String,Object>>) rt.postForObject(
-                "http://localhost:8001/forecast/gbdt", entity, List.class
+        var body = Map.of(
+                "freq","10min",
+                "horizon_minutes", horizonMinutes,
+                "target","in_temp",
+                "series", series
         );
-        return (preds == null)? List.of() : preds;
+        try {
+            @SuppressWarnings("unchecked")
+            var preds = (List<Map<String,Object>>) restTemplate.postForObject(
+                    "http://localhost:8001/forecast/gbdt",
+                    new HttpEntity<>(body, headers),
+                    List.class
+            );
+            return (preds == null) ? List.of() : preds;
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            System.out.println("[FORECAST] ⚠️ 파이썬 예측 서버(8001) 연결 실패(미리보기): " + e.getMessage());
+            return List.of();
+        } catch (org.springframework.web.client.RestClientException e) {
+            System.out.println("[FORECAST] ⚠️ 파이썬 호출 실패(미리보기): " + e.getMessage());
+            return List.of();
+        }
     }
 
     /** FastAPI에 온도/습도 요청 → 1h/6h/24h 뽑아 DB에 ‘매 분’ 저장 */
     @Transactional
     public void runIndoorForecastAndSave(int locId, int horizonMinutes) {
         // 1) 입력 시계열 준비 (최근 7일로 확대: 과거 실내값이라도 잡히게)
-        int lookbackDays = 7;
-        var series = buildIndoorOutdoorSeries(locId, lookbackDays);
-        if (series.isEmpty()) {
-            System.out.println("[FORECAST] 입력 시리즈가 비어있음");
-            return;
-        }
+        var series = buildIndoorOutdoorSeries(locId, 7);
+        if (series.isEmpty()) { System.out.println("[FORECAST] 입력 시리즈 비어있음"); return; }
 
-        // 실내 값이 하나라도 있는지 확인 (없으면 예측 의미 없음 → 스킵)
         boolean hasIndoor = series.stream().anyMatch(m ->
                 m.get("in_temp") != null || m.get("in_hum") != null);
-        if (!hasIndoor) {
-            System.out.println("[FORECAST] 실내 데이터가 하나도 없음 → 이번 분 저장 스킵");
-            return;
-        }
+        if (!hasIndoor) { System.out.println("[FORECAST] 실내 데이터 없음 → 생략"); return; }
 
-        // 2) FastAPI 호출
-        var rt = new org.springframework.web.client.RestTemplate();
-        var headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
-        String url = "http://localhost:8001/forecast/gbdt";
+        var predsTemp = callFastApi(series, horizonMinutes, "in_temp");
+        var predsHum  = callFastApi(series, horizonMinutes, "in_hum");
 
-        // 온도
-        var bodyTemp = java.util.Map.of(
-                "freq","10min","horizon_minutes",horizonMinutes,"target","in_temp","series",series
-        );
-        @SuppressWarnings("unchecked")
-        var predsTemp = (java.util.List<java.util.Map<String,Object>>)
-                rt.postForEntity(url, new org.springframework.http.HttpEntity<>(bodyTemp, headers), java.util.List.class)
-                        .getBody();
+        // 파이썬 서버가 죽어 있으면 둘 다 null → 깔끔히 리턴 (DB에 NULL행 방지)
+        if (predsTemp == null && predsHum == null) return;
 
-        // 습도
-        var bodyHum = java.util.Map.of(
-                "freq","10min","horizon_minutes",horizonMinutes,"target","in_hum","series",series
-        );
-        @SuppressWarnings("unchecked")
-        var predsHum = (java.util.List<java.util.Map<String,Object>>)
-                rt.postForEntity(url, new org.springframework.http.HttpEntity<>(bodyHum, headers), java.util.List.class)
-                        .getBody();
-
-        // 3) 저장 기준 시각 = 최신 weather_current.observed_at (분 단위)
         var base = currentRepo.findTopByLocIdOrderByObservedAtDesc(locId)
                 .map(e -> e.getObservedAt().withSecond(0).withNano(0))
-                .orElse(java.time.LocalDateTime.now().withSecond(0).withNano(0));
+                .orElse(LocalDateTime.now().withSecond(0).withNano(0));
 
-        // 4) 1h/6h/24h 뽑기
-        var t1h  = pickNearestYhat(predsTemp, base.plusHours(1));
-        var t6h  = pickNearestYhat(predsTemp, base.plusHours(6));
-        var t24h = pickNearestYhat(predsTemp, base.plusHours(24));
-        var h1h  = pickNearestYhat(predsHum,  base.plusHours(1));
-        var h6h  = pickNearestYhat(predsHum,  base.plusHours(6));
-        var h24h = pickNearestYhat(predsHum,  base.plusHours(24));
-
-        // 5) ✅ 전부 null이면 저장하지 않고 스킵 (NULL 행 방지)
-        boolean allNull =
-                t1h == null && t6h == null && t24h == null &&
-                        h1h == null && h6h == null && h24h == null;
-        if (allNull) {
-            System.out.println("[FORECAST] 모두 null — 저장 생략 (base=" + base + ")");
-            return;
+        Double t1h=null,t6h=null,t24h=null,h1h=null,h6h=null,h24h=null;
+        if (predsTemp != null) {
+            t1h  = pickNearestYhat(predsTemp, base.plusHours(1));
+            t6h  = pickNearestYhat(predsTemp, base.plusHours(6));
+            t24h = pickNearestYhat(predsTemp, base.plusHours(24));
+        }
+        if (predsHum != null) {
+            h1h  = pickNearestYhat(predsHum,  base.plusHours(1));
+            h6h  = pickNearestYhat(predsHum,  base.plusHours(6));
+            h24h = pickNearestYhat(predsHum,  base.plusHours(24));
         }
 
-        // 6) 저장
-        saveForecastSnapshot(locId, base, t1h, t6h, t24h, h1h, h6h, h24h);
+        boolean allNull = t1h==null&&t6h==null&&t24h==null&&h1h==null&&h6h==null&&h24h==null;
+        if (allNull) { System.out.println("[FORECAST] 모두 null — 저장 생략 (base="+base+")"); return; }
 
-        System.out.println("[FORECAST] base=" + base +
-                " t1h=" + t1h + " t6h=" + t6h + " t24h=" + t24h +
-                " h1h=" + h1h + " h6h=" + h6h + " h24h=" + h24h);
+        saveForecastSnapshot(locId, base, t1h, t6h, t24h, h1h, h6h, h24h);
+        System.out.println("[FORECAST] base="+base+" t1h="+t1h+" t6h="+t6h+" t24h="+t24h+
+                " h1h="+h1h+" h6h="+h6h+" h24h="+h24h);
     }
 }
