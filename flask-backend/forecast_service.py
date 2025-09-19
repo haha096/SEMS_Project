@@ -11,8 +11,25 @@ from datetime import datetime, timedelta
 from bisect import bisect_left
 import mysql.connector as mysql
 import io
+from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(title="Forecast Service")
+
+# CORS 허용
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # 프론트엔드 React 주소
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 헬스체크
+@app.get("/health")
+def health():
+    return {"ok": True, "time": datetime.now().isoformat()}
+
 
 class Point(BaseModel):
     ts: str
