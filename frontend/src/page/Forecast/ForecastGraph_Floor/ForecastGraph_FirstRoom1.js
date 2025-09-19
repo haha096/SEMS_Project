@@ -1,75 +1,108 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+    LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
+    ReferenceLine
+} from "recharts";
 import "../../../css/page_css/ForecastGraph_FirstRoom1.css"; // 새 CSS
 
+
+const metricToApi = {
+    temperature: "temp",
+    humidity: "hum",
+};
+
+const metricLabel = {
+    temperature: "온도(°C)",
+    humidity: "습도(%)",
+};
+
+function useForecastData(startDate, metric) {
+    const [payload, setPayload] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (!startDate) return;
+        const controller = new AbortController();
+        const apiMetric = metricToApi[metric] || "temp";
+        const d = startDate;
+
+        setLoading(true);
+        setError("");
+
+        fetch(`http://localhost:8001/forecast/curve?metric=${apiMetric}&date=${d}`, {
+            signal: controller.signal,
+        })
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((json) => setPayload(json))
+            .catch((e) => {
+                if (e.name !== "AbortError") setError("데이터를 불러오지 못했습니다.");
+            })
+            .finally(() => setLoading(false));
+
+        return () => controller.abort();
+    }, [startDate, metric]);
+
+    return { payload, loading, error };
+}
+
+function mergeSeries(payload) {
+    if (!payload) return [];
+    const map = new Map();
+
+    const attach = (arr, key) => {
+        (arr || []).forEach((row) => {
+            const ts = row.ts; // "YYYY-MM-DD HH:mm:ss"
+            if (!map.has(ts)) map.set(ts, { ts });
+            map.get(ts)[key] = row[key];
+        });
+    };
+
+    attach(payload.past_indoor, "indoor");
+    attach(payload.past_outdoor, "outdoor");
+    (payload.forecast || []).forEach((p) => {
+        if (!map.has(p.ts)) map.set(p.ts, { ts: p.ts });
+        map.get(p.ts).forecast = p.forecast;
+        map.get(p.ts).alert = p.alert;
+    });
+
+    // 정렬
+    return Array.from(map.values()).sort(
+        (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+    );
+}
+
 function ForecastGraph_FirstRoom1() {
-    // 날짜(페이지 특성상 일자 선택은 유지하되, 최근 과거 시간도 추가)
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+    // 날짜/옵션 상태
+    const [startDate, setStartDate] = useState(
+        () => new Date().toISOString().slice(0, 10)
+    );
+    const [viewMode, setViewMode] = useState("chart"); // chart | table
+    const [metric, setMetric] = useState("temperature"); // temperature | humidity
 
-    // 조건
-    const [minutes, setMinutes] = useState(30);               // 15 | 30 | 60
-    const [viewMode, setViewMode] = useState("chart");       // chart | table
-    const [metric, setMetric] = useState("temperature");     // temperature | humidity | dust
+    const { payload, loading, error } = useForecastData(startDate, metric);
+    const data = useMemo(() => mergeSeries(payload), [payload]);
 
-    // 데이터 소스 (기존 파이썬 서버)
-    const [chartUrl, setChartUrl] = useState("http://localhost:5000/chart");
-    const [tableData, setTableData] = useState([]);
-
-    // 슬라이드: 0 = 분석(기존), 1 = 전력 예측(자리)
-    const [page, setPage] = useState(0);
-
-    const metricMap = {
-        temperature: "avg_temperature",
-        humidity: "avg_humidity",
-        dust: "avg_dust",
-    };
-
-    // 오늘 날짜 기본
-    useEffect(() => {
-        const today = new Date().toISOString().slice(0, 10);
-        setStartDate(today);
-        setEndDate(today);
-    }, []);
-
-    // 조회 실행
-    const handleSearch = () => {
-        if (!startDate) {
-            alert("날짜를 선택하세요.");
-            return;
-        }
-        const baseUrl = `http://localhost:5000/${viewMode === "chart" ? "chart" : "table"}`;
-        const finalEndDate = endDate || startDate;
-        // minutes 조건을 백엔드가 쓰도록 같이 전달(백엔드가 무시해도 무방)
-        const query = `?start=${startDate}&end=${finalEndDate}&type=${metric}&minutes=${minutes}`;
-
-        if (viewMode === "chart") {
-            setChartUrl(baseUrl + query);
-        } else {
-            fetch(baseUrl + query)
-                .then((res) => res.json())
-                .then((data) => setTableData(data))
-                .catch(() => setTableData([]));
-        }
-    };
-
-    // 조건이 바뀌면 자동 조회
-    useEffect(() => {
-        if (startDate && endDate) handleSearch();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [startDate, endDate, minutes, viewMode, metric]);
-
-    // 슬라이드 이동
-    const nextPage = () => setPage((p) => Math.min(p + 1, 1));
-    const prevPage = () => setPage((p) => Math.max(p - 1, 0));
+    // now 기준선 (서버 JSON의 ts 포맷에 맞춤)
+    const nowTs = useMemo(() => {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+            d.getHours()
+        )}:${pad(d.getMinutes())}:${pad(0)}`;
+    }, [payload]); // payload 바뀔 때마다 재계산(대략)
 
     return (
         <div className="forecast-root">
             <div className="forecast-layout">
                 {/* ===== 좌측: 세로 조건 패널 ===== */}
                 <aside className="forecast-aside">
-                    <h4 className="forecast-aside-title">📅 날짜 선택 영역</h4>
+                    <h4 className="forecast-aside-title">📅 날짜 선택</h4>
 
-                    <label className="forecast-label-block">날짜 단위</label>
+                    <label className="forecast-label-block">날짜</label>
                     <input
                         type="date"
                         className="forecast-input w-full"
@@ -78,41 +111,6 @@ function ForecastGraph_FirstRoom1() {
                     />
 
                     <div className="forecast-box">
-                        {/* 최근 과거 시간 */}
-                        <div className="forecast-group">
-                            <div className="forecast-group-title">최근 과거 시간</div>
-                            <label className="forecast-radio">
-                                <input
-                                    type="radio"
-                                    name="minutes"
-                                    value={15}
-                                    checked={minutes === 15}
-                                    onChange={() => setMinutes(15)}
-                                />
-                                15분
-                            </label>
-                            <label className="forecast-radio">
-                                <input
-                                    type="radio"
-                                    name="minutes"
-                                    value={30}
-                                    checked={minutes === 30}
-                                    onChange={() => setMinutes(30)}
-                                />
-                                30분
-                            </label>
-                            <label className="forecast-radio">
-                                <input
-                                    type="radio"
-                                    name="minutes"
-                                    value={60}
-                                    checked={minutes === 60}
-                                    onChange={() => setMinutes(60)}
-                                />
-                                60분
-                            </label>
-                        </div>
-
                         {/* 분석방식 */}
                         <div className="forecast-group">
                             <div className="forecast-group-title">분석방식</div>
@@ -134,13 +132,13 @@ function ForecastGraph_FirstRoom1() {
                                     checked={viewMode === "table"}
                                     onChange={() => setViewMode("table")}
                                 />
-                                표 분석
+                                표
                             </label>
                         </div>
 
                         {/* 데이터 그래프(지표) */}
                         <div className="forecast-group">
-                            <div className="forecast-group-title">데이터 그래프</div>
+                            <div className="forecast-group-title">지표</div>
                             <label className="forecast-radio">
                                 <input
                                     type="radio"
@@ -161,79 +159,111 @@ function ForecastGraph_FirstRoom1() {
                                 />
                                 습도
                             </label>
-                            <label className="forecast-radio">
-                                <input
-                                    type="radio"
-                                    name="metric"
-                                    value="dust"
-                                    checked={metric === "dust"}
-                                    onChange={(e) => setMetric(e.target.value)}
-                                />
-                                미세먼지
-                            </label>
                         </div>
                     </div>
                 </aside>
 
-                {/* ===== 우측: 슬라이드 그래프 ===== */}
+                {/* ===== 우측: 그래프/표 ===== */}
                 <main className="forecast-main">
-                    {/* 우측 상단 화살표 스위치 */}
-                    <div className="forecast-switchbar">
-                        {page > 0 && (
-                            <button className="forecast-arrow left" onClick={prevPage} aria-label="분석 슬라이드로 이동">
-                                ◀
-                            </button>
-                        )}
-                        {page < 1 && (
-                            <button className="forecast-arrow right" onClick={nextPage} aria-label="전력 예측 슬라이드로 이동">
-                                ▶
-                            </button>
-                        )}
-                    </div>
+                    <div className="forecast-card">
+                        {viewMode === "chart" ? (
+                            <>
+                                {loading && <div className="forecast-loader">로딩중...</div>}
+                                {error && <div className="forecast-error">{error}</div>}
+                                {!loading && !error && (
+                                    <ResponsiveContainer width="100%" height={360}>
+                                        <LineChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                                            <XAxis dataKey="ts" tick={{ fontSize: 12 }} />
+                                            <YAxis tick={{ fontSize: 12 }} />
+                                            <Tooltip />
+                                            <Legend />
 
-                    <div className="forecast-slider">
-                        <div
-                            className="forecast-slider-inner"
-                            style={{ transform: `translateX(-${page * 100}%)` }}
-                        >
-                            {/* 슬라이드 1: 기존 분석(그래프/표) */}
-                            <div className="forecast-slide">
-                                <div className="forecast-card">
-                                    {viewMode === "chart" ? (
-                                        <img className="forecast-chart-img" src={chartUrl} alt="Python Chart" />
-                                    ) : (
-                                        <div className="forecast-table-wrap">
-                                            <table className="forecast-table">
-                                                <thead>
-                                                <tr>
-                                                    <th>시간</th>
-                                                    <th>{metric}</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                {tableData.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>{row.timestamp}</td>
-                                                        <td>{row[metricMap[metric]]}</td>
-                                                    </tr>
-                                                ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                            {/* now 기준선 */}
+                                            <ReferenceLine
+                                                x={nowTs}
+                                                stroke="#9ca3af"
+                                                strokeDasharray="3 3"
+                                                ifOverflow="extendDomain"
+                                            />
 
-                            {/* 슬라이드 2: 전력 예측(자리) */}
-                            <div className="forecast-slide">
-                                <div className="forecast-placeholder">
-                                    <div className="forecast-placeholder-title">예상 전력 사용량</div>
-                                    <div className="forecast-placeholder-desc">
-                                        전력 예측 API 연결 후 이 영역에 그래프가 표시됩니다.
-                                    </div>
+                                            {/* 과거 실내/실외: 점선 */}
+                                            <Line
+                                                type="monotone"
+                                                dataKey="indoor"
+                                                name="실내(과거)"
+                                                stroke="#1f77b4"
+                                                strokeDasharray="4 4"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                isAnimationActive={false}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="outdoor"
+                                                name="실외(과거)"
+                                                stroke="#2ca02c"
+                                                strokeDasharray="4 4"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                isAnimationActive={false}
+                                            />
+
+                                            {/* 예측: 실선 + 경고 점 */}
+                                            <Line
+                                                type="monotone"
+                                                dataKey="forecast"
+                                                name={`예측(${metricLabel[metric]})`}
+                                                stroke="#ff7f0e"
+                                                strokeWidth={3}
+                                                isAnimationActive={false}
+                                                dot={({ cx, cy, payload }) =>
+                                                    payload.alert ? (
+                                                        <circle cx={cx} cy={cy} r={5} fill="red" />
+                                                    ) : null
+                                                }
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                )}
+
+                                <div className="forecast-legend">
+                                    <span className="chip chip-blue">실내(과거) · 점선</span>
+                                    <span className="chip chip-green">실외(과거) · 점선</span>
+                                    <span className="chip chip-orange">예측(미래) · 실선</span>
+                                    <span className="chip chip-red">경고 지점</span>
                                 </div>
+                            </>
+                        ) : (
+                            // 표 모드 (같은 payload 재사용)
+                            <div className="forecast-table-wrap">
+                                {loading && <div className="forecast-loader">로딩중...</div>}
+                                {error && <div className="forecast-error">{error}</div>}
+                                {!loading && !error && (
+                                    <table className="forecast-table">
+                                        <thead>
+                                        <tr>
+                                            <th>시간</th>
+                                            <th>실내</th>
+                                            <th>실외</th>
+                                            <th>예측</th>
+                                            <th>알림</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {data.map((r, i) => (
+                                            <tr key={i}>
+                                                <td>{r.ts}</td>
+                                                <td>{r.indoor ?? "-"}</td>
+                                                <td>{r.outdoor ?? "-"}</td>
+                                                <td>{r.forecast ?? "-"}</td>
+                                                <td>{r.alert ? "⚠️" : ""}</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
-                        </div>
+                        )}
                     </div>
                 </main>
             </div>

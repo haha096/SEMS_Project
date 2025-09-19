@@ -4,6 +4,13 @@ from typing import List, Optional
 import pandas as pd
 import numpy as np
 from lightgbm import LGBMRegressor
+from fastapi.responses import StreamingResponse, JSONResponse
+from contextlib import contextmanager
+from forecast_graph import generate_graph
+from datetime import datetime, timedelta
+from bisect import bisect_left
+import mysql.connector as mysql
+import io
 
 app = FastAPI(title="Forecast Service")
 
@@ -170,6 +177,181 @@ def forecast(req: Req):
     steps = req.horizon_minutes // 10
     # 학습 때의 컬럼 순서를 그대로 사용
     return rollout(model, df_feat, steps, feature_cols=list(X.columns))
+
+
+# ----------------------
+# DB 연결/조회/곡선 생성
+# ----------------------
+
+DB = dict(host="127.0.0.1", user="root", password="root", database="springdb")
+PAST_HOURS = 6
+STEP_MIN   = 10
+
+@contextmanager
+def get_conn():
+    conn = mysql.connect(**DB)
+    try:
+        yield conn
+    finally:
+        try: conn.close()
+        except: pass
+
+def q(conn, sql, params=()):
+    cur = conn.cursor()
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+def fetch_past_indoor(conn, metric):
+    col = "avg_temperature" if metric=="temp" else "avg_humidity"
+    sql = f"""
+      SELECT timestamp AS ts, {col} AS y
+      FROM environment_data
+      WHERE timestamp >= NOW() - INTERVAL {PAST_HOURS} HOUR
+      ORDER BY ts
+    """
+    return q(conn, sql)
+
+def fetch_past_outdoor(conn, metric):
+    # weather_current의 컬럼명이 다르면 여기만 바꾸세요.
+    col = "temp" if metric=="temp" else "hum"
+    sql = f"""
+      SELECT observed_at AS ts, {col} AS y
+      FROM weather_current
+      WHERE observed_at >= NOW() - INTERVAL {PAST_HOURS} HOUR
+      ORDER BY ts
+    """
+    return q(conn, sql)
+
+def fetch_forecast_h(conn, metric, date_str, h):
+    cols = ("temp_1h","temp_6h","temp_24h") if metric=="temp" else ("hum_1h","hum_6h","hum_24h")
+    if   h==1:  colh, off = cols[0], "1 HOUR"
+    elif h==6:  colh, off = cols[1], "6 HOUR"
+    elif h==24: colh, off = cols[2], "24 HOUR"
+    else: raise ValueError("h must be 1, 6, or 24")
+    sql = f"""
+    WITH f AS (
+      SELECT DATE_ADD(current, INTERVAL {off}) AS ts, {colh} AS yhat, current AS base_current
+      FROM weather_forecast
+      WHERE current >= TIMESTAMP(%s,'00:00:00') AND current < TIMESTAMP(%s,'23:59:59')
+    ),
+    r AS (
+      SELECT ts, yhat, ROW_NUMBER() OVER (PARTITION BY ts ORDER BY base_current DESC) rn
+      FROM f
+    )
+    SELECT ts, yhat FROM r WHERE rn=1 ORDER BY ts
+    """
+    return q(conn, sql, (date_str, date_str))
+
+def _to_map(rows):
+    # [(ts, y)] -> {ts: float(y) or None}
+    out = {}
+    for ts, y in rows:
+        out[ts] = float(y) if (y is not None) else None
+    return out
+
+def _nearest(m, t, tol=None):
+    if not m:
+        return None
+    if tol is None:
+        tol = timedelta(minutes=max(5, STEP_MIN))  # 기존 5분 → step_min 기준
+    keys = sorted(m.keys())
+    i = bisect_left(keys, t)
+    cand = []
+    if i < len(keys): cand.append(keys[i])
+    if i > 0:         cand.append(keys[i-1])
+    if not cand: return None
+    best = min(cand, key=lambda k: abs(k - t))
+    return m[best] if abs(best - t) <= tol else None
+
+def _w(t, a, b):
+    if t <= a: return 1.0
+    if t >= b: return 0.0
+    return (b - t) / (b - a)
+
+def _blend(a, b, w):
+    """a,b 중 None이 있으면 다른 한쪽을 사용. 둘 다 None이면 None."""
+    if a is None and b is None:
+        return None
+    if a is None:
+        return float(b)
+    if b is None:
+        return float(a)
+    return float(w)*float(a) + float(1.0 - w)*float(b)
+
+
+def build_forecast_curve(h1_rows, h6_rows, h24_rows, metric="temp", step_min=STEP_MIN):
+    m1, m6, m24 = _to_map(h1_rows), _to_map(h6_rows), _to_map(h24_rows)
+    now = datetime.now().replace(second=0, microsecond=0)
+    t   = now
+    end = now + timedelta(hours=24)
+    out = []
+
+    while t <= end:
+        dh  = t - now
+        y1  = _nearest(m1,  t)
+        y6  = _nearest(m6,  t)
+        y24 = _nearest(m24, t)
+
+        if dh <= timedelta(hours=3):            # 0~3h : 1h 주도
+            y = y1 if y1 is not None else y6 if y6 is not None else y24
+        elif dh <= timedelta(hours=5):          # 3~5h : 1h→6h 블렌드(안전)
+            w = _w(dh, timedelta(hours=3), timedelta(hours=5))
+            y = _blend(y1, y6, w)
+        elif dh <= timedelta(hours=15):         # 5~15h : 6h 주도
+            y = y6 if y6 is not None else y1 if y1 is not None else y24
+        elif dh <= timedelta(hours=17):         # 15~17h : 6h→24h 블렌드(안전)
+            w = _w(dh, timedelta(hours=15), timedelta(hours=17))
+            y = _blend(y6, y24, w)
+        else:                                   # 17~24h : 24h 주도
+            y = y24 if y24 is not None else y6 if y6 is not None else y1
+
+        if y is not None:
+            if metric == "temp":
+                y = max(-20, min(50, y)); alert = (y >= 30) or (y <= 18)
+            else:
+                y = max(0, 100 if y is None else min(100, y)); alert = (y >= 70) or (y <= 35)
+            out.append((t, round(float(y), 2), alert))
+
+        t += timedelta(minutes=step_min)
+
+    return out
+
+# ----------------------
+# (C) API
+# ----------------------
+@app.get("/forecast/plot")
+def plot_endpoint(date: Optional[str] = None, metric: str = "temp"):
+    date_str = date or datetime.now().strftime("%Y-%m-%d")
+    with get_conn() as conn:
+        past_in  = fetch_past_indoor(conn, metric)
+        past_out = fetch_past_outdoor(conn, metric)
+        h1 = fetch_forecast_h(conn, metric, date_str, 1)
+        h6 = fetch_forecast_h(conn, metric, date_str, 6)
+        h24= fetch_forecast_h(conn, metric, date_str, 24)
+    curve = build_forecast_curve(h1, h6, h24, metric=metric, step_min=STEP_MIN)
+    png_bytes = generate_graph(past_in, past_out, curve, metric=metric)
+    return StreamingResponse(io.BytesIO(png_bytes), media_type="image/png")
+
+@app.get("/forecast/curve")
+def curve_endpoint(date: Optional[str] = None, metric: str = "temp"):
+    date_str = date or datetime.now().strftime("%Y-%m-%d")
+    with get_conn() as conn:
+        past_in  = fetch_past_indoor(conn, metric)
+        past_out = fetch_past_outdoor(conn, metric)
+        h1 = fetch_forecast_h(conn, metric, date_str, 1)
+        h6 = fetch_forecast_h(conn, metric, date_str, 6)
+        h24= fetch_forecast_h(conn, metric, date_str, 24)
+    curve = build_forecast_curve(h1, h6, h24, metric=metric, step_min=STEP_MIN)
+    def to_dict(rows,key): return [ {"ts": str(ts), key: y} for ts,y in rows ]
+    return JSONResponse({
+        "past_indoor":  to_dict(past_in,  "indoor"),
+        "past_outdoor": to_dict(past_out, "outdoor"),
+        "forecast": [ {"ts": t.strftime("%Y-%m-%d %H:%M:%S"), "forecast": y, "alert": alert}
+                      for (t,y,alert) in curve ]
+    })
+
 
 if __name__ == "__main__":
     import uvicorn
