@@ -1,6 +1,6 @@
 package Not_Found.scheduled;
 
-import Not_Found.service.WeatherService;
+import Not_Found.service.ForecastService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class WeatherForecastScheduler {
 
-    private final WeatherService weatherService;
+    private final ForecastService forecastService;
     private static final AtomicBoolean running = new AtomicBoolean(false);
     private static final int LOC_ID = 1;
 
@@ -21,7 +21,7 @@ public class WeatherForecastScheduler {
         if (!running.compareAndSet(false, true)) return;
         try {
             System.out.println("[FORECAST-SCHED] forecast start");
-            weatherService.runIndoorForecastAndSave(LOC_ID, 1440);
+            forecastService.runIndoorForecastAndSave(LOC_ID, 1440);
             System.out.println("[FORECAST-SCHED] forecast done");
         } catch (Exception e) {
             e.printStackTrace();
