@@ -18,7 +18,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/sensor")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true") // CORS 허용
+//@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true") // CORS 허용
+@CrossOrigin(origins = "http://sems-project.s3-website-us-east-1.amazonaws.com", allowCredentials = "true")
 public class SensorController {
 
     private final SensorService sensorService;

@@ -14,7 +14,7 @@ function Monitoring_outdoor_default(){
 
     //온도와 습도 가져오기 위한 useEffect
     useEffect(() => {
-        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+        fetch("http://107.21.218.155:8080/weather/outdoor?nx=58&ny=125")
             .then(res => res.text())
             .then(data => {
                 // 예: "온도: 23.3℃, 습도: 32%"
@@ -36,7 +36,7 @@ function Monitoring_outdoor_default(){
 
     //업데이트 시간 가져오기 위한 useEffect
     useEffect(() => {
-        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+        fetch("http://107.21.218.155:8080/weather/outdoor?nx=58&ny=125")
             .then(res => res.text())
             .then(data => {
                 const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
@@ -63,7 +63,7 @@ function Monitoring_outdoor_default(){
 
     //미세먼지 데이터 옮기기 위한 useEfect
     useEffect(() => {
-        fetch("http://localhost:8080/api/dust")
+        fetch("http://107.21.218.155:8080/api/dust")
             .then(res => res.json())
             .then(data => {
                 setPm10(data.pm10Value);
