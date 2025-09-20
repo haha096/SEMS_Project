@@ -26,7 +26,7 @@ function FirstRoom1(){
             return;
         }
 
-        const baseUrl = `http://localhost:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
+        const baseUrl = `http://107.21.218.155:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
         const finalEndDate = endDate || startDate;
         const query = `?start=${startDate}&end=${finalEndDate}&type=${type}`;
 
