@@ -1,5 +1,6 @@
 package Not_Found.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Data
@@ -14,6 +15,7 @@ public class UserDTO {
     private String email;
     private boolean isAdmin;
 
+    @JsonProperty("isAdmin")
     public Boolean getIsAdmin() {
         return isAdmin;
     }
