@@ -8,6 +8,12 @@ import OutdoorYellow from './assets/outdoor_img/outdoor_yellow.png';
 import OutdoorOrange from './assets/outdoor_img/outdoor_orange.PNG';
 import OutdoorRed from './assets/outdoor_img/outdoor_red.png';
 
+import IndoorBlue from './assets/indoor_img/indoor_blue.png';
+import IndoorGreen from './assets/indoor_img/indoor_green.png';
+import IndoorYellow from './assets/indoor_img/indoor_yellow.png';
+import IndoorOrange from './assets/indoor_img/indoor_orange.png';
+import IndoorRed from './assets/indoor_img/indoor_red.png';
+
 function Main({ isLoggedIn, userNickname, message, socket }) {
 
     const navigate = useNavigate();
@@ -77,14 +83,36 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 
 
 
-
+    // 실외 온도별 이미지
     const selectOutdoorImageByTemperature = (temp) => {
+        if (Number.isNaN(temp)) return OutdoorBlue;
         if (temp >= 30) return OutdoorRed;
         if (temp >= 26) return OutdoorOrange;
         if (temp >= 22) return OutdoorYellow;
         if (temp >= 19) return OutdoorGreen;
         return OutdoorBlue;
     }
+
+    // 실내 온도별 이미지
+    const selectIndoorImageByTemperature = (temp) => {
+        if (Number.isNaN(temp)) return IndoorBlue;
+        if (temp >= 30) return IndoorRed;
+        if (temp >= 26) return IndoorOrange;
+        if (temp >= 22) return IndoorYellow;
+        if (temp >= 19) return IndoorGreen;
+        return IndoorBlue;
+    };
+
+// 전력(W)별 이미지 (에너지 섹션 아이콘용)
+// 전력 = CURRENT(A) * VOLT(V)
+    const selectEnergyImageByPower = (powerW) => {
+        if (Number.isNaN(powerW)) return IndoorBlue;
+        if (powerW >= 250) return IndoorRed;
+        if (powerW >= 180) return IndoorOrange;
+        if (powerW >= 120) return IndoorYellow;
+        if (powerW >= 60)  return IndoorGreen;
+        return IndoorBlue;
+    };
 
     // 실외 온습도 & 미세먼지 상태
     const [outdoorTemperature, setOutdoorTemperature] = useState("-");
@@ -152,6 +180,14 @@ useEffect(() => {
     const outdoorImage = selectOutdoorImageByTemperature(outdoorTempValue);
 
 
+    // 실내
+    const indoorTempValue = parseFloat(sensorData?.TEMP ?? NaN);
+    const indoorImage = selectIndoorImageByTemperature(indoorTempValue);
+
+   // 에너지(순간 전력)
+    const powerW = (sensorData?.CURRENT ?? 0) * (sensorData?.VOLT ?? 0);
+    const energyImage = selectEnergyImageByPower(powerW);
+
     return (
         <div className="container1">
             <div className="main-banner">
@@ -162,7 +198,7 @@ useEffect(() => {
                 <div className="container3">
                     <div id="indoor" className="custom-box">실내상황</div>
                     <div className="indoor_content">
-                        <img src="/images/indoor_yellow.PNG" name="indoor_image" className="icon"/>
+                        <img src={indoorImage} name="indoor_image" className="icon"/>
                         <div className="info-text">
                             <p>현재 실내 온도 : {sensorData["TEMP"]}도</p>
                             <p>현재 실내 습도 : {sensorData["HUM"]}%</p>
@@ -215,7 +251,7 @@ useEffect(() => {
                 <div className="container5"> {/* 지난달 에너지 총량, next이미지, 이번달 에너지 총량, 절약힌 에너지*/}
                     <div className="container6">
                         <h2 className="title">사용시간</h2>
-                        <img src="/images/indoor_yellow.PNG" alt="에너지 아이콘" className="energy-icon" />
+                        <img src={energyImage} alt="에너지 아이콘" className="energy-icon" />
                         <p className="energy-text">공기 청정기 쓴 시간<br />{lastMonthUsageSeconds} 초</p>
                     </div> {/* container6 */}
 
@@ -227,7 +263,7 @@ useEffect(() => {
 
                     <div className="container6">
                         <h2 className="title">전력량</h2>
-                        <img src="/images/indoor_blue.PNG" alt="에너지 아이콘" className="energy-icon" />
+                        <img src={energyImage} alt="에너지 아이콘" className="energy-icon" />
                         <p className="energy-text">공기 청정기 전력량<br /> {( (sensorData.CURRENT * sensorData.VOLT * lastMonthUsageSeconds) / 3600000 * 10 /* 오차값 */ ).toFixed(2)}  kWh</p>
                     </div> {/* container6 */}
 

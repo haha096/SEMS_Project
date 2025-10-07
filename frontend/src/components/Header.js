@@ -1,9 +1,26 @@
 import React from 'react';
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Header.css';
 
 function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
     const navigate = useNavigate();
+    const [isAdmin, setIsAdmin] = useState(false); // 관리자 여부 저장
+
+    //관리자 여부 설정
+    useEffect(() => {
+        fetch("http://localhost:8080/api/user/session", {
+            credentials: "include", // 세션 쿠키 유지
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("로그인 안 됨");
+                return res.json();
+            })
+            .then((data) => {
+                setIsAdmin(data.isAdmin === true || data.isAdmin === true);
+            })
+            .catch(() => setIsAdmin(false));
+    }, []);
 
     const handleMyPageClick = () => {
         if (isLoggedIn) {
@@ -23,7 +40,17 @@ function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
                 <Link to="/Monitoring_indoor" style={{ textDecoration: 'none' }}>온습도 / 미세먼지 모니터링</Link>
                 <Link to="/dataanalysis" style={{ textDecoration: 'none' }}>데이터 분석</Link>
                 <Link to="/" style={{ textDecoration: 'none' }}>보고서</Link>
-                <Link to="/devicecontrol" style={{ textDecoration: 'none' }}>기기 제어</Link>
+                <button
+                  onClick={() => {
+                    if (isAdmin) {
+                          navigate("/devicecontrol");
+                        } else {
+                          alert("관리자만 접근할 수 있습니다.");
+                        }
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+                >
+                  기기 제어</button>
                 <button onClick={handleMyPageClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
                     내정보
                 </button>
