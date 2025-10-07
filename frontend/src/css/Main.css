@@ -20,6 +20,11 @@
     border-radius: 10px;
     width: 300px;
     height: 400px;
+    margin-left: 210px;
+}
+
+.main-login-container {
+    margin-left: 10px !important;
 }
 
 .indoor_content{
@@ -109,7 +114,7 @@
 }
 
 .container4{
-    margin-left: 100px;
+    margin-left: 250px;
     margin-top: 20px;
 
 }
