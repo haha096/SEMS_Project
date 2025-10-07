@@ -1,19 +1,27 @@
 // src/main/java/com/example/controller/MotorControlController.java
 package Not_Found.controller;
 
-
+import lombok.RequiredArgsConstructor;
+import Not_Found.service.DeviceStateService;
 import Not_Found.service.MotorControlService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(
+        origins = {"http://localhost:3000", "http://127.0.0.1:3000"},
+        allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/motor")
 public class MotorControlController {
 
     private final MotorControlService motorControlService;
+    private final DeviceStateService deviceStateService;
 
-    public MotorControlController(MotorControlService motorControlService) {
+    public MotorControlController(MotorControlService motorControlService,
+                                  DeviceStateService deviceStateService) {
         this.motorControlService = motorControlService;
+        this.deviceStateService = deviceStateService;
     }
 
     /**
@@ -23,7 +31,9 @@ public class MotorControlController {
     @GetMapping("/auto")
     public ResponseEntity<String> setAutoMode() {
         // MODE:AUTO 메시지를 control/room1/mode 토픽으로 발행
+        System.out.println("[API] /api/motor/auto");
         motorControlService.sendMode("AUTO");
+        deviceStateService.updateMode("AUTO");
         return ResponseEntity.ok("AUTO 모드 명령 전송 완료");
     }
 
@@ -35,6 +45,7 @@ public class MotorControlController {
      */
     @PostMapping("/manual")
     public ResponseEntity<String> setManualMode(@RequestBody ManualRequest req) {
+        System.out.println("[API] /api/motor/manual level=" + req.getLevel());
         int level = req.getLevel();
         if (level < 1 || level > 3) {
             return ResponseEntity.badRequest().body("level은 1~3 사이여야 합니다.");
@@ -44,6 +55,9 @@ public class MotorControlController {
         motorControlService.sendMode("MANUAL");
         // ② 속도 토픽(control/room1/speed)에 SPEED:{level} 발행
         motorControlService.sendSpeed(level);
+        //상태저장
+        deviceStateService.updateMode("MANUAL");
+        deviceStateService.updateLevel(level);
 
         return ResponseEntity.ok("MANUAL 모드 및 속도(" + level + ") 명령 전송 완료");
     }
@@ -56,11 +70,14 @@ public class MotorControlController {
      */
     @PostMapping("/power")
     public ResponseEntity<String> setPower(@RequestBody PowerRequest req) {
+        System.out.println("[API] /api/motor/power on=" + req.isOn());
         boolean on = req.isOn();
         motorControlService.sendPower(on);
+        deviceStateService.updatePower(on);
         String status = on ? "ON" : "OFF";
         return ResponseEntity.ok("전원 " + status + " 명령 전송 완료");
     }
+
 
     // ─────────────────────────────────────────────────────────────────
     // DTO 클래스들 (요청 바디 매핑용)

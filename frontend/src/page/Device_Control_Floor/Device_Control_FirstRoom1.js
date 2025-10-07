@@ -1,5 +1,5 @@
 // src/components/Device_Control_FirstRoom1.js
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../../css/page_css/Device_Control_Floor/Device_Control_FirstRoom1.css";
 
@@ -21,6 +21,40 @@ function Device_Control_FirstRoom1() {
 
     // API 호출 후 피드백 메시지
     const [statusMessage, setStatusMessage] = useState("");
+
+
+    // 명령 직후 폴링 값으로 UI가 덮어씌워지는 것을 잠깐 막는 타이머
+    const suppressPollUntil = useRef(0);
+    const suppressPolling = (ms = 1500) => {
+           suppressPollUntil.current = Date.now() + ms;
+        };
+
+    // ─────────────────────────────────────────────
+    // 0) 현재상태 조회
+    // ─────────────────────────────────────────────
+    useEffect(() => {
+        const fetchState = async () => {
+            try {
+                const res = await axios.get("/api/motor/state");
+                const data = res.data;
+                if (Date.now() < suppressPollUntil.current) return;
+                setPowerOn(data.powerOn);
+                setMode(data.mode);
+                setManualLevel(data.level || 1);
+                setSavedLevel(data.level || 1);
+            } catch (err) {
+                console.error("상태 조회 실패:", err);
+                setStatusMessage("⚠ 상태 조회 실패");
+            }
+        };
+
+        // 최초 1회 즉시 실행
+        fetchState();
+
+        // 3초마다 주기적으로 상태 갱신
+        const interval = setInterval(fetchState, 3000);
+        return () => clearInterval(interval); // 언마운트 시 정리
+    }, []);
 
     // ─────────────────────────────────────────────
     // 1) 전원 ON/OFF 토글 함수
@@ -55,23 +89,42 @@ function Device_Control_FirstRoom1() {
     // ─────────────────────────────────────────────
     // 3) 수동 모드(저장) 함수
     // ─────────────────────────────────────────────
-    const handleManualSave = async () => {
-        // manualLevel 이 1~3 사이인지 검증
-        if (manualLevel < 1 || manualLevel > 3) {
-            setStatusMessage("⚠ 레벨은 1~3 사이여야 합니다.");
-            return;
-        }
-        try {
-            // 백엔드: POST /api/motor/manual { level: manualLevel }
-            const res = await axios.post("/api/motor/manual", { level: manualLevel });
-            setMode("MANUAL");
-            setSavedLevel(manualLevel);
-            setStatusMessage(res.data); // 예: "MANUAL 모드 및 속도(2) 명령 전송 완료"
-        } catch (error) {
-            console.error("Manual API 호출 에러:", error);
-            setStatusMessage("⚠ 수동 모드 명령 전송 실패");
-        }
-    };
+    // const handleManualSave = async () => {
+    //     // manualLevel 이 1~3 사이인지 검증
+    //     if (manualLevel < 1 || manualLevel > 3) {
+    //         setStatusMessage("⚠ 레벨은 1~3 사이여야 합니다.");
+    //         return;
+    //     }
+    //     try {
+    //         // 백엔드: POST /api/motor/manual { level: manualLevel }
+    //         const res = await axios.post("/api/motor/manual", { level: manualLevel });
+    //         setMode("MANUAL");
+    //         setSavedLevel(manualLevel);
+    //         setStatusMessage(res.data); // 예: "MANUAL 모드 및 속도(2) 명령 전송 완료"
+    //     } catch (error) {
+    //         console.error("Manual API 호출 에러:", error);
+    //         setStatusMessage("⚠ 수동 모드 명령 전송 실패");
+    //     }
+    // };
+
+    // 수동 모드 전환(현재 manualLevel로 즉시 서버 반영)
+        const handleManualMode = async () => {
+          if (!powerOn) return;
+          if (manualLevel < 1 || manualLevel > 3) {
+                setStatusMessage("⚠ 레벨은 1~3 사이여야 합니다.");
+                return;
+              }
+          try {
+                const res = await axios.post("/api/motor/manual", { level: manualLevel });
+                setMode("MANUAL");
+                setSavedLevel(manualLevel);
+                setStatusMessage(res.data);
+                suppressPolling(); // 1.5초 정도 폴링 무시
+              } catch (error) {
+                console.error("Manual API 호출 에러:", error);
+                setStatusMessage("⚠ 수동 모드 명령 전송 실패");
+              }
+        };
 
     return (
         <div className="device_control_detail-container">
@@ -144,16 +197,24 @@ function Device_Control_FirstRoom1() {
                     >
                         자동
                     </button>
+                    {/*<button*/}
+                    {/*    className={`mode-toggle-button ${mode === "MANUAL" ? "active" : ""}`}*/}
+                    {/*    onClick={() => {*/}
+                    {/*        setMode("MANUAL");*/}
+                    {/*        setStatusMessage("수동 모드 선택됨. 레벨을 조정하고 저장하세요.");*/}
+                    {/*    }}*/}
+                    {/*    disabled={!powerOn}           // 전원 OFF면 비활성화*/}
+                    {/*>*/}
+                    {/*    수동*/}
+                    {/*</button>*/}
+
                     <button
-                        className={`mode-toggle-button ${mode === "MANUAL" ? "active" : ""}`}
-                        onClick={() => {
-                            setMode("MANUAL");
-                            setStatusMessage("수동 모드 선택됨. 레벨을 조정하고 저장하세요.");
-                        }}
-                        disabled={!powerOn}           // 전원 OFF면 비활성화
+                      className={`mode-toggle-button ${mode === "MANUAL" ? "active" : ""}`}
+                      onClick={handleManualMode}
+                      disabled={!powerOn}
                     >
-                        수동
-                    </button>
+                    수동
+                </button>
                 </div>
             </div>
 
@@ -196,7 +257,7 @@ function Device_Control_FirstRoom1() {
                     {/* 저장(전송) 버튼 */}
                     <button
                         className="manual-save-button"
-                        onClick={handleManualSave}
+                        onClick={handleManualMode}
                         disabled={mode !== "MANUAL"}
                     >
                         저장
