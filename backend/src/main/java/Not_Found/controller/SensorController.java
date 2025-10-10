@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+//바뀐 부분
 @RestController
 @RequestMapping("/sensor")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true") // CORS 허용

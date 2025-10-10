@@ -9,6 +9,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+//바뀐 부분
 @Component
 public class SensorWebSocketHandler extends TextWebSocketHandler {
 

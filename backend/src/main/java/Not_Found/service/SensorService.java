@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//바뀐 부분
 @Service
 public class SensorService {
     private final SensorRepository sensorRepository;
