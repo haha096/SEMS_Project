@@ -1,8 +1,11 @@
 package Not_Found.service;
 
+import Not_Found.handler.SensorWebSocketHandler;
 import Not_Found.model.dto.SensorData;
 import Not_Found.model.entity.SensorEntity;
 import Not_Found.repository.SensorRepository;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +16,12 @@ import java.util.stream.Collectors;
 @Service
 public class SensorService {
     private final SensorRepository sensorRepository;
+    private final SensorWebSocketHandler sensorWebSocketHandler;
 
-    public SensorService(SensorRepository sensorRepository) {
+    public SensorService(SensorRepository sensorRepository,
+                         SensorWebSocketHandler sensorWebSocketHandler) {
         this.sensorRepository = sensorRepository;
+        this.sensorWebSocketHandler = sensorWebSocketHandler;
     }
 
     /** DB에 Sensor 데이터를 저장 */
@@ -36,7 +42,25 @@ public class SensorService {
         entity.setPowerStatus(dto.getPowerStatus());
         // timestamp는 @PrePersist로 자동 설정됨
 
-        return sensorRepository.save(entity);
+        SensorEntity saved = sensorRepository.save(entity);
+
+        // ✅ 저장 직후 Flutter로 실시간 푸시 (한 번만!)
+        String json = new JSONObject()
+                .put("TEMP",   saved.getTemperature())
+                .put("HUM",    saved.getHumidity())
+                .put("PM1",    saved.getPm1())
+                .put("PM10",   saved.getPm10())
+                .put("PM2.5",  saved.getPm2_5())
+                .put("CURRENT",saved.getCurrent())
+                .put("VOLT",   saved.getVolt())
+                .put("MODE",   saved.getMode())
+                .put("SPEED",  saved.getSpeed())
+                .put("POWER",  saved.getPowerStatus())
+                .toString();
+
+        sensorWebSocketHandler.broadcastWithoutSave(json);
+
+        return saved;
     }
 
     /** DB에서 최신 센서 데이터 조회 */
