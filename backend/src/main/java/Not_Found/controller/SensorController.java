@@ -5,14 +5,13 @@ import Not_Found.model.dto.SensorData;
 import Not_Found.model.dto.UsageTimeDTO;
 import Not_Found.service.EnvironmentDataService;
 import Not_Found.service.SensorService;
+import Not_Found.handler.SensorWebSocketHandler;
 
 
 import Not_Found.util.MyUtil;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,11 +22,15 @@ public class SensorController {
 
     private final SensorService sensorService;
     private final EnvironmentDataService environmentDataService;
+    private final SensorWebSocketHandler sensorWebSocketHandler;
 
     @Autowired
-    public SensorController(SensorService sensorService,EnvironmentDataService environmentDataService) {
+    public SensorController(SensorService sensorService,
+                            EnvironmentDataService environmentDataService,
+                            SensorWebSocketHandler sensorWebSocketHandler) {
         this.sensorService = sensorService;
         this.environmentDataService = environmentDataService;
+        this.sensorWebSocketHandler = sensorWebSocketHandler;
     }
 
     // 최신 센서 데이터 조회
@@ -56,4 +59,13 @@ public class SensorController {
         return environmentDataService.getUsageTime();
     }
 
+    @GetMapping("/debug/push")
+    public String debugPush(@RequestParam double t, @RequestParam double h) {
+        String json = new org.json.JSONObject()
+                .put("TEMP", t).put("HUM", h)
+                .put("PM10", 25).put("PM2.5", 12)
+                .toString();
+        sensorWebSocketHandler.broadcastWithoutSave(json);
+        return "ok";
+    }
 }

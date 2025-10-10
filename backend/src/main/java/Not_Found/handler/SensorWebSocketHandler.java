@@ -30,6 +30,7 @@ public class SensorWebSocketHandler extends TextWebSocketHandler {
      * DB 저장 없이, 이미 저장된 DTO(JSON) 문자열을 모든 세션에만 전송한다.
      */
     public void broadcastWithoutSave(String message) {
+        System.out.println("📡 전송 세션 수=" + sessions.size() + ", payload=" + message);
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 try {
