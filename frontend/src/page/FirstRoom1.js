@@ -77,9 +77,7 @@ function FirstRoom1(){
                         <label><input type="radio" name="analysisType" value="graph"
                                       checked={viewMode === 'chart'} onChange={() => setViewMode('chart')}/>
                             그래프 분석</label>
-                        <label><input type="radio" name="analysisType" value="table"
-                                      checked={viewMode === 'table'} onChange={() => setViewMode('table')}/>
-                            표 분석</label>
+
                     </div>
 
                     {/* 항목 선택 */}
