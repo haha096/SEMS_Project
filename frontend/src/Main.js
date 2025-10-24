@@ -119,6 +119,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
     const [outdoorHumidity, setOutdoorHumidity] = useState("-");
     const [outdoorPm10, setOutdoorPm10] = useState("-");
 
+
     useEffect(() => {
         if (!socket) return;
 
@@ -145,27 +146,46 @@ useEffect(() => {
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
-        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
-            .then(res => res.text())
-            .then(data => {
-                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
-                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
-                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
-                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
-            })
-            .catch(() => {
+        let mounted = true;
+        const BASE = "http://localhost:8080";        // 필요 시 10.0.2.2:8080(에뮬), 혹은 배포 도메인
+
+        const fetchOutdoor = async () => {
+            try {
+                // 1) 날씨(백엔드 JSON: { temp, humidity, windSpeed, windDir, weather, ... })
+                const r1 = await fetch(`${BASE}/weather/outdoor?nx=58&ny=125`, { cache: "no-store" });
+                if (!r1.ok) throw new Error(`weather ${r1.status}`);
+                const w = await r1.json();
+
+                // 2) 미세먼지(기존 API 유지)
+                const r2 = await fetch(`${BASE}/api/dust`, { cache: "no-store" });
+                const d = r2.ok ? await r2.json() : {};
+
+                if (!mounted) return;
+                setOutdoorTemperature(
+                    typeof w.temp === "number" && !Number.isNaN(w.temp) ? w.temp.toFixed(1) : "-"
+                );
+                setOutdoorHumidity(
+                    typeof w.humidity === "number" && !Number.isNaN(w.humidity) ? w.humidity.toFixed(0) : "-"
+                );
+                {
+                    const rawPm10 =
+                    typeof d.pm10 === "number" ? d.pm10 :
+                        typeof d.pm10Value === "number" ? d.pm10Value :
+                            (d?.pm10 ?? d?.pm10Value);
+                    const pm10Num = Number(rawPm10);
+                    setOutdoorPm10(Number.isFinite(pm10Num) ? pm10Num.toFixed(0) : "-");
+                }
+            } catch (e) {
+                if (!mounted) return;
                 setOutdoorTemperature("-");
                 setOutdoorHumidity("-");
-            });
-
-        fetch("http://localhost:8080/api/dust")
-            .then(res => res.json())
-            .then(data => {
-                setOutdoorPm10(data.pm10Value || "-");
-            })
-            .catch(() => {
                 setOutdoorPm10("-");
-            });
+            }
+        };
+
+        fetchOutdoor();
+        const id = setInterval(fetchOutdoor, 60_000); // 1분마다 갱신
+        return () => { mounted = false; clearInterval(id); };
     }, []);
 
 
@@ -216,7 +236,7 @@ useEffect(() => {
                         <div className="info-text">
                             <p>현재 실외 온도 : {outdoorTemperature}도</p>
                             <p>현재 실외 습도 : {outdoorHumidity}%</p>
-                            <p>현재 실외 미세먼지 : {outdoorPm10}ug</p>
+                            <p>현재 실외 미세먼지 : {outdoorPm10 === "-" ? "--" : outdoorPm10} μg/m³</p>
                         </div>
                     </div> {/* outdoor_content */}
                 </div> {/* container3 */}
