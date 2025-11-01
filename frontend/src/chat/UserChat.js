@@ -11,7 +11,7 @@ function UserChat({ userNickname }) {
 
     useEffect(() => {
         // 과거 메시지 로드
-        fetch(`http://107.21.218.155:8080/api/chat/history/${userNickname}`)
+        fetch(`http://34.231.96.8:8080/api/chat/history/${userNickname}`)
             .then(res => res.json())
             .then(data => setMessages(Array.isArray(data) ? data : []))
             .catch(err => {
@@ -20,7 +20,7 @@ function UserChat({ userNickname }) {
             });
 
         // WebSocket 연결
-        const socket = new SockJS(`http://107.21.218.155:8080/ws?userId=${userNickname}`);
+        const socket = new SockJS(`http://34.231.96.8:8080/ws?userId=${userNickname}`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
             onConnect: () => {

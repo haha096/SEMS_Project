@@ -16,12 +16,12 @@ const AdminChat = () => {
     useEffect(() => {
         if (clientRef.current) return;
 
-        axios.get('http://107.21.218.155:8080/api/chat/users')
+        axios.get('http://34.231.96.8:8080/api/chat/users')
             .then(res => setUserList(res.data))
             .catch(err => console.error('유저 목록 불러오기 실패:', err));
 
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://107.21.218.155:8080/ws'),
+            webSocketFactory: () => new SockJS('http://34.231.96.8:8080/ws'),
             reconnectDelay: 5000,
             onConnect: () => {
                 console.log('[ADMIN] WebSocket Connected');
@@ -86,7 +86,7 @@ const AdminChat = () => {
         });
 
         try {
-            const res = await axios.get(`http://107.21.218.155:8080/api/chat/history/${userId}`);
+            const res = await axios.get(`http://34.231.96.8:8080/api/chat/history/${userId}`);
             const dbMessages = res.data;
 
             const wsMessages = messagesMap[userId] || [];

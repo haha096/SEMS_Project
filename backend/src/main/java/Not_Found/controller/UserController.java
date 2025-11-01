@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 //@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
-@CrossOrigin(origins = "http://sems-project.s3-website-us-east-1.amazonaws.com", allowCredentials = "true")
+@CrossOrigin(origins = "http://sems-project1.s3-website-us-east-1.amazonaws.com", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/user")
 public class UserController {

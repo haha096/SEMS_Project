@@ -47,7 +47,7 @@ function MyPage(){
         }
 
         // ✅ 3. 서버에 토큰을 포함시켜 요청을 보냅니다.
-        fetch('http://107.21.218.155:8080/api/user/session', {
+        fetch('http://34.231.96.8:8080/api/user/session', {
            headers: {
                 "Authorization": `Bearer ${token}`
             }
