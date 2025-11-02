@@ -20,7 +20,7 @@ function Signup() {
     };
 
     const checkDuplicate = async () => {
-        const response = await fetch("http://107.21.218.155:8080/api/user/check-duplicate", {
+        const response = await fetch("http://34.231.96.8:8080/api/user/check-duplicate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -64,7 +64,7 @@ function Signup() {
         };
 
         try {
-            const response = await fetch("http://107.21.218.155:8080/api/user/signup", {
+            const response = await fetch("http://34.231.96.8:8080/api/user/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
