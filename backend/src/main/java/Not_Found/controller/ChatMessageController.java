@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ChatMessageController {
 
     @Autowired
@@ -24,3 +25,4 @@ public class ChatMessageController {
         return chatMessageService.getAllUserIdsWhoChattedWithAdmin();
     }
 }
+
