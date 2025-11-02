@@ -1,0 +1,84 @@
+.detail_indoor-container {
+    padding: 20px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.detail_indoor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.detail_indoor-container2{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 0 20px;
+ }
+
+.update_time {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-left: 10px;
+}
+
+.outdoor_button {
+    background-color: #2c79ff;
+    color: white;
+    border: none;
+    padding: 14px 32px;            /* 내부 여백 증가 (상하/좌우) */
+    border-radius: 16px;           /* 둥근 정도 증가 */
+    font-size: 18px;               /* 글자 크기 증가 */
+    font-weight: bold;            /* 글자 두껍게 */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+    min-width: 120px;              /* 최소 너비 지정 (너무 작게 안 보이도록) */
+}
+
+.outdoor_button:hover {
+    background-color: #1e5edc;
+}
+
+.outdoor-button {
+    background-color: #2c79ff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.status-section {
+    margin-bottom: 30px;
+}
+
+.status-box {
+    border: 1px solid #2980b9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;       /* ⬅ 수직 가운데 정렬 */
+    padding: 20px 24px;
+    font-size: 20px;
+    font-weight: 500;
+    border-bottom: 1px solid #2980b9;
+}
+
+.status-item span {
+    flex: 1;                   /* 각 span이 동일한 너비 */
+    text-align: center;       /* 가운데 정렬 */
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
