@@ -1,64 +1,125 @@
+// import React, {useEffect, useState} from "react";
+// import { useNavigate } from "react-router-dom";
+// import '../css/mypage_css/MyPage.css'
+// import { Link } from "react-router-dom";
+
+// function MyPage(){
+//     // const [userInfo, setUserInfo] = useState(null);
+//     // const navigate = useNavigate();
+//     //
+//     // useEffect(() => {
+//     //     fetch("http://localhost:8080/api/user/session", {
+//     //         credentials: "include"  // ✅ 세션 쿠키 포함
+//     //     })
+//     //         .then(res => {
+//     //             if (!res.ok) {
+//     //                 throw new Error("로그인 정보가 없습니다.");
+//     //             }
+//     //             return res.json();
+//     //         })
+//     //         .then(data => {
+//     //             console.log("서버에서 받은 유저 정보:", data);
+//     //             setUserInfo(data);
+//     //         })
+//     //         .catch(err => {
+//     //             console.error(err.message);
+//     //             alert("로그인 후 이용해 주세요.");
+//     //             navigate("/login");
+//     //         });
+//     // }, [navigate]);
+//     //
+//     // if (!userInfo) {
+//     //     return <div>Loading...</div>;
+//     // }
+
+//     const [userInfo, setUserInfo] = useState(null);
+//     const navigate = useNavigate();
+
+//     useEffect(() => {
+//         // ✅ 1. localStorage에서 토큰을 가져옵니다.
+//         const token = localStorage.getItem("token");
+
+//         // ✅ 2. 토큰이 없으면 로그인 페이지로 이동합니다.
+//         if (!token) {
+//             alert("로그인 후 이용해 주세요.");
+//             navigate("/login");
+//             return;
+//         }
+
+//         // ✅ 3. 서버에 토큰을 포함시켜 요청을 보냅니다.
+//         fetch('http://107.21.218.155:8080/api/user/session', {
+//            headers: {
+//                 "Authorization": `Bearer ${token}`
+//             }
+//         })
+//             .then(res => {
+//                 if (!res.ok) {
+//                     // 토큰이 유효하지 않거나 만료된 경우이므로
+//                     // 로그인 페이지로 다시 보냅니다.
+//                     localStorage.removeItem("token");
+//                     localStorage.removeItem("userInfo");
+//                     throw new Error("로그인 정보가 유효하지 않습니다.");
+//                 }
+//                 return res.json();
+//             })
+//             .then(data =>{
+//                 console.log("마이페이지 유저 정보:", data);  // 👉 데이터 확인용
+//                 setUserInfo(data);
+//             })
+//             .catch(err => {
+//                 console.error(err.message);
+//                 alert("로그인 후 이용해 주세요.");
+//                 window.location.href = "/login";
+//             });
+//     }, []);
+
+//     if (!userInfo) {
+//         return <div>Loading...</div>;
+//     }
+
+//     return(
+//         <div className="mypage-container">
+
+//             <div className="mypage-box">
+//                 <div className="mypage-box_content">
+//                     <div className="mypage_title">마이페이지</div>
+
+//                     <div className="mypage_content2">
+//                         <div className="mypage_name">{userInfo.nickname}님 (사용자)</div>
+//                         <div className="mypage_id">아이디 : {userInfo.userId}</div>
+//                         <div className="mypage_email">이메일 : {userInfo.email}</div>
+//                     </div>
+
+//                 </div>
+//             </div>
+
+
+//             <div className="mypage-actions">
+//                 <Link to="/UpdateId" style={{ textDecoration: 'none' }}>아이디 변경</Link>
+//                 <span>|</span>
+//                 <Link to="/UpdatePwd" style={{ textDecoration: 'none' }}>비밀번호 변경</Link>
+//             </div>
+//         </div>
+//     );
+// }
+
+
+// export default MyPage;
+
 import React, {useEffect, useState} from "react";
-import { useNavigate } from "react-router-dom";
 import '../css/mypage_css/MyPage.css'
 import { Link } from "react-router-dom";
 
 function MyPage(){
-    // const [userInfo, setUserInfo] = useState(null);
-    // const navigate = useNavigate();
-    //
-    // useEffect(() => {
-    //     fetch("http://localhost:8080/api/user/session", {
-    //         credentials: "include"  // ✅ 세션 쿠키 포함
-    //     })
-    //         .then(res => {
-    //             if (!res.ok) {
-    //                 throw new Error("로그인 정보가 없습니다.");
-    //             }
-    //             return res.json();
-    //         })
-    //         .then(data => {
-    //             console.log("서버에서 받은 유저 정보:", data);
-    //             setUserInfo(data);
-    //         })
-    //         .catch(err => {
-    //             console.error(err.message);
-    //             alert("로그인 후 이용해 주세요.");
-    //             navigate("/login");
-    //         });
-    // }, [navigate]);
-    //
-    // if (!userInfo) {
-    //     return <div>Loading...</div>;
-    // }
-
     const [userInfo, setUserInfo] = useState(null);
-    const navigate = useNavigate();
 
     useEffect(() => {
-        // ✅ 1. localStorage에서 토큰을 가져옵니다.
-        const token = localStorage.getItem("token");
-
-        // ✅ 2. 토큰이 없으면 로그인 페이지로 이동합니다.
-        if (!token) {
-            alert("로그인 후 이용해 주세요.");
-            navigate("/login");
-            return;
-        }
-
-        // ✅ 3. 서버에 토큰을 포함시켜 요청을 보냅니다.
-        fetch('http://107.21.218.155:8080/api/user/session', {
-           headers: {
-                "Authorization": `Bearer ${token}`
-            }
+        fetch('http://localhost:8080/api/auth/session', {
+            credentials: 'include'  // ✅ 세션 쿠키 포함
         })
             .then(res => {
                 if (!res.ok) {
-                    // 토큰이 유효하지 않거나 만료된 경우이므로
-                    // 로그인 페이지로 다시 보냅니다.
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("userInfo");
-                    throw new Error("로그인 정보가 유효하지 않습니다.");
+                    throw new Error("로그인 정보가 없습니다.");
                 }
                 return res.json();
             })
@@ -95,9 +156,9 @@ function MyPage(){
 
 
             <div className="mypage-actions">
-                <Link to="/UpdateId" style={{ textDecoration: 'none' }}>아이디 변경</Link>
+                <Link to="/update-nickname" style={{ textDecoration: 'none' }}>닉네임 변경</Link>
                 <span>|</span>
-                <Link to="/UpdatePwd" style={{ textDecoration: 'none' }}>비밀번호 변경</Link>
+                <Link to="/update-password" style={{ textDecoration: 'none' }}>비밀번호 변경</Link>
             </div>
         </div>
     );
