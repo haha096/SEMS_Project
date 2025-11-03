@@ -2,6 +2,8 @@ import React, {useState, useEffect} from "react";
 import { Link } from "react-router-dom";
 import '../css/page_css/Floor/FirstRoom1.css';
 
+const FLASK = process.env.REACT_APP_FLASK_BASE || "http://localhost:5000";
+
 function FirstRoom1(){
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -10,7 +12,7 @@ function FirstRoom1(){
     // 온도 그래프를 보이게하도록 설계
 
     const [viewMode, setViewMode] = useState('chart');
-    const [chartUrl, setChartUrl] = useState("http://107.21.218.155:5000/chart");
+    const [chartUrl, setChartUrl] = useState("");
     //표 렌더링 컴포넌트
     const [tableData, setTableData] = useState([]);
 
@@ -26,14 +28,15 @@ function FirstRoom1(){
             return;
         }
 
-        const baseUrl = `http://107.21.218.155:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
+        const baseUrl = `http://localhost:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
         const finalEndDate = endDate || startDate;
         const query = `?start=${startDate}&end=${finalEndDate}&type=${type}`;
+        const q = `?start=${encodeURIComponent(startDate)}&type=${encodeURIComponent(type)}&_=${Date.now()}`;
 
         if (viewMode === 'chart') {
-            setChartUrl(baseUrl + query);
+            setChartUrl(`${FLASK}/chart${q}`);
         } else {
-            fetch(baseUrl + query)
+            fetch(`${FLASK}/table${q}`)
                 .then((res) => res.json())
                 .then((data) => setTableData(data));
         }

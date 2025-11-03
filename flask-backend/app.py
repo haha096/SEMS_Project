@@ -16,7 +16,7 @@ CORS(app)
 
 # 한글 폰트 설정 (EC2 환경)
 try:
-    font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+    font_path = r"C:\Windows\Fonts\malgun.ttf"
     font_prop = fm.FontProperties(fname=font_path)
     plt.rc('font', family=font_prop.get_name())
     plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
@@ -34,9 +34,9 @@ def get_filtered_data(date_str, column):
     conn = None
     try:
         conn = pymysql.connect(
-            host='database.cjcco8ekivoh.us-east-1.rds.amazonaws.com',
-            user='root',
-            password='root',
+            host='localhost',
+            user='admin',
+            password='mysqlmysql',
             db='springdb',
             charset='utf8mb4'
         )

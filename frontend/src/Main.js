@@ -131,7 +131,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 }, [socket]);
 
 useEffect(() => {
-    fetch("http://107.21.218.155:8080/sensor/energy/usage-time")
+    fetch("http://localhost:8080/sensor/energy/usage-time")
         .then(res => res.json())
         .then(data => {
             if (data.seconds !== undefined) {
@@ -145,25 +145,34 @@ useEffect(() => {
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
-        fetch("http://107.21.218.155:8080/weather/outdoor?nx=58&ny=125")
-            .then(res => res.text())
+        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
+            .then(res => res.json())
             .then(data => {
-                const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
-                const humiMatch = data.match(/습도:\s*([\d.]+)%/);
-                setOutdoorTemperature(tempMatch ? tempMatch[1] : "-");
-                setOutdoorHumidity(humiMatch ? humiMatch[1] : "-");
+                // 백엔드 DTO 키 이름이 temperature/humidity 또는 temp/hum 어느 쪽이든 커버
+                const temp = data.temperature ?? data.temp ?? data.TEMP ?? "-";
+                const humi = data.humidity   ?? data.hum ?? data.HUM ?? "-";
+
+                setOutdoorTemperature(String(temp));
+                setOutdoorHumidity(String(humi));
+                console.log("🌤️ outdoor weather:", data);
             })
-            .catch(() => {
+            .catch(err => {
+                console.error("weather/outdoor error:", err);
                 setOutdoorTemperature("-");
                 setOutdoorHumidity("-");
             });
 
-        fetch("http://107.21.218.155:8080/api/dust")
+        // Dust: 위경도(lat/lon)로 요청 보내기 (예: 서울시청 근처)
+        fetch("http://localhost:8080/api/dust?lat=37.5665&lon=126.9780")
             .then(res => res.json())
             .then(data => {
-                setOutdoorPm10(data.pm10Value || "-");
+                // DustDto 내부 키에 맞춰 유연 처리
+                const pm10 = data.pm10Value ?? data.pm10 ?? data.PM10 ?? "-";
+                setOutdoorPm10(pm10);
+                console.log("🌫️ dust:", data);
             })
-            .catch(() => {
+            .catch(err => {
+                console.error("api/dust error:", err);
                 setOutdoorPm10("-");
             });
     }, []);
