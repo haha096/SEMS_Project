@@ -17,7 +17,7 @@ function App() {
     };
 
     const handleLogout = () => {
-        fetch("http://107.21.218.155:8080/api/user/logout", {
+        fetch("http://localhost:8080/api/user/logout", {
             method: "POST",
             credentials: "include"
         })
@@ -34,7 +34,7 @@ function App() {
 
     useEffect(() => {
         // WebSocket 연결
-        const ws = new WebSocket('ws://107.21.218.155:8080/ws/sensor');
+        const ws = new WebSocket('ws://localhost:8080/ws/sensor');
 
         ws.onopen = () => {
             console.log("✅ WebSocket 연결 성공");
@@ -70,7 +70,7 @@ function App() {
         }
 
         // 서버 연결 테스트
-        fetch("http://107.21.218.155:8080/")
+        fetch("http://localhost:8080/")
             .then(res => res.text())
             .then(data => setMessage(data))
             .catch(err => {

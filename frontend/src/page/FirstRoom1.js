@@ -10,7 +10,7 @@ function FirstRoom1(){
     // 온도 그래프를 보이게하도록 설계
 
     const [viewMode, setViewMode] = useState('chart');
-    const [chartUrl, setChartUrl] = useState("http://107.21.218.155:5000/chart");
+    const [chartUrl, setChartUrl] = useState("http://localhost:5000/chart");
     //표 렌더링 컴포넌트
     const [tableData, setTableData] = useState([]);
 
@@ -26,7 +26,7 @@ function FirstRoom1(){
             return;
         }
 
-        const baseUrl = `http://107.21.218.155:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
+        const baseUrl = `http://localhost:5000/${viewMode === 'chart' ? 'chart' : 'table'}`;
         const finalEndDate = endDate || startDate;
         const query = `?start=${startDate}&end=${finalEndDate}&type=${type}`;
 

@@ -14,7 +14,7 @@ function Login({ handleLogin }) {
         setErrorMessage("");
 
         try {
-            const response = await fetch("http://107.21.218.155:8080/api/user/login", {
+            const response = await fetch("http://localhost:8080/api/user/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

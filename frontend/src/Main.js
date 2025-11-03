@@ -131,7 +131,7 @@ function Main({ isLoggedIn, userNickname, message, socket }) {
 }, [socket]);
 
 useEffect(() => {
-    fetch("http://107.21.218.155:8080/sensor/energy/usage-time")
+    fetch("http://localhost:8080/sensor/energy/usage-time")
         .then(res => res.json())
         .then(data => {
             if (data.seconds !== undefined) {
@@ -145,7 +145,7 @@ useEffect(() => {
 
     //실외 온습도, 미세먼지 함수
     useEffect(() => {
-        fetch("http://107.21.218.155:8080/weather/outdoor?nx=58&ny=125")
+        fetch("http://localhost:8080/weather/outdoor?nx=58&ny=125")
             .then(res => res.text())
             .then(data => {
                 const tempMatch = data.match(/온도:\s*([\d.]+)℃/);
@@ -158,7 +158,7 @@ useEffect(() => {
                 setOutdoorHumidity("-");
             });
 
-        fetch("http://107.21.218.155:8080/api/dust")
+        fetch("http://localhost:8080/api/dust")
             .then(res => res.json())
             .then(data => {
                 setOutdoorPm10(data.pm10Value || "-");
