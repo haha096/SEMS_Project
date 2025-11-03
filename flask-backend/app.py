@@ -27,9 +27,9 @@ def home():
 # 최신 24개 데이터만 가져오는 함수 (정렬 포함)
 def get_filtered_data(date_str, column):
     conn = pymysql.connect(
-        host='localhost',
-        user='root',
-        password='admin',
+        host='34.231.96.8',
+        user='admin',
+        password='mysqlmysql',
         db='springdb',
         charset='utf8mb4'
     )
