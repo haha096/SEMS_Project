@@ -35,8 +35,8 @@ def get_filtered_data(date_str, column):
     try:
         conn = pymysql.connect(
             host='database.cjcco8ekivoh.us-east-1.rds.amazonaws.com',
-            user='admin',
-            password='mysqlmysql',
+            user='root',
+            password='root',
             db='springdb',
             charset='utf8mb4'
         )
