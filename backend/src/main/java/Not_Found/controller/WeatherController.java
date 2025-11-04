@@ -1,15 +1,14 @@
+// src/main/java/Not_Found/controller/WeatherController.java
 package Not_Found.controller;
 
 import Not_Found.service.WeatherService;
+import Not_Found.service.WeatherService.WeatherDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/weather")
+@RequestMapping({"/api/weather", "/weather"}) // ← /api 프리픽스 추가(겸용)
 public class WeatherController {
 
     private final WeatherService weatherService;
@@ -20,16 +19,17 @@ public class WeatherController {
     }
 
     @GetMapping("/outdoor")
-    public ResponseEntity<String> getOutdoorWeather(
+    public ResponseEntity<?> getOutdoorWeather(
             @RequestParam(defaultValue = "58") int nx,
             @RequestParam(defaultValue = "125") int ny
     ) {
         try {
-            String result = weatherService.getWeatherData(nx, ny);
-            return ResponseEntity.ok(result);
+            WeatherDto dto = weatherService.getCurrentWeather(nx, ny);
+            return ResponseEntity.ok(dto);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("날씨 데이터를 가져오는 중 오류 발생: " + e.getMessage());
+            return ResponseEntity.status(500)
+                    .body("{\"message\":\"날씨 데이터를 가져오는 중 오류 발생\",\"error\":\"" + e.getMessage() + "\"}");
         }
     }
 }

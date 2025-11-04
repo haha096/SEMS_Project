@@ -4,7 +4,7 @@ import Not_Found.model.dto.UserDTO;
 import Not_Found.model.entity.User;
 import Not_Found.service.UserService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -50,13 +50,76 @@ public class UserController {
             response.put("isAdmin", user.getIsAdmin());
             return ResponseEntity.ok(response);
         } else {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "아이디 또는 비밀번호가 틀렸습니다.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            // ✅ 변경: 400 → 401 (UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "아이디 또는 비밀번호가 틀렸습니다."));
         }
     }
 
-    //로그인하고 내정보 페이지에 정보를 넣기 위한 GetMapping
+    @PostMapping("/password-reset")
+    public ResponseEntity<?> handlePasswordReset(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        boolean result = userService.processPasswordReset(email);
+        if (result) {
+            return ResponseEntity.ok().body(Map.of("message", "비밀번호 재설정 이메일이 전송되었습니다."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "등록되지 않은 이메일입니다."));
+        }
+    }
+
+    @PostMapping("/find-id")
+    public ResponseEntity<?> handleFindId(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        boolean result = userService.processFindId(email);
+        if (result) {
+            return ResponseEntity.ok().body(Map.of("message", "아이디가 이메일로 전송되었습니다."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "등록되지 않은 이메일입니다."));
+        }
+    }
+
+    @PostMapping("/update-nickname")
+    public ResponseEntity<String> updateNickname(@RequestBody Map<String, String> payload, HttpSession session) {
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String newNickname = payload.get("nickname");
+        String result = userService.updateNickname(userId, newNickname);
+
+        if ("SUCCESS".equals(result)) {
+            // 세션의 닉네임 정보도 업데이트
+            session.setAttribute("nickname", newNickname);
+            return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+        } else {
+            // "이미 사용 중인 닉네임입니다." 또는 "사용자를 찾을 수 없습니다." 등의 메시지 반환
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> payload, HttpSession session) {
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String currentPassword = payload.get("currentPassword");
+        String newPassword = payload.get("newPassword");
+        String result = userService.updatePassword(userId, currentPassword, newPassword);
+
+        if ("SUCCESS".equals(result)) {
+            // 보안을 위해 세션을 무효화하여 자동 로그아웃 처리
+            session.invalidate();
+            return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
+        } else {
+            // "현재 비밀번호가 일치하지 않습니다." 등의 메시지 반환
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+    }
+
+    // 로그인 후 내정보 페이지에 정보를 넣기 위한 세션 확인
     @GetMapping("/session")
     public ResponseEntity<?> checkSession(HttpSession session) {
         Object userId = session.getAttribute("userId");
@@ -107,6 +170,4 @@ public class UserController {
 
         return ResponseEntity.ok("중복 없음");
     }
-
-
 }
