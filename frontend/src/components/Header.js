@@ -12,7 +12,7 @@ function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
     useEffect(() => {
         (async () => {
             try {
-                console.log("🛰️ 세션 요청 중...");
+                console.log("세션 요청 중...");
                 const res = await fetch("http://localhost:8080/api/auth/session", {
                     credentials: "include",
                 });
@@ -20,8 +20,8 @@ function Header({ isLoggedIn, handleLogout, hasNewMessage }) {
                 if (!res.ok) throw new Error("not logged in");
                 const data = await res.json();
 
-                console.log("✅ 세션 응답 데이터:", data);
-                console.log("🔑 isAdmin 필드 타입:", typeof data.isAdmin, "값:", data.isAdmin);
+                console.log("세션 응답 데이터:", data);
+                console.log("isAdmin 필드 타입:", typeof data.isAdmin, "값:", data.isAdmin);
 
                 const admin =
                     data?.isAdmin === true ||
