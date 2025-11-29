@@ -1,0 +1,57 @@
+# config.yaml — SEMS(자율 공기청정) 설정
+
+# --- 제어 타깃/여유범위(데드밴드) ---
+targets:
+  pm25: 15        # μg/m³ 이하 목표
+  pm10: 30
+deadband:
+  pm25: 2         # 목표-데드밴드보다 작으면 '충분히 좋음'
+  pm10: 5
+
+# --- 최소 유지시간(히스테리시스) ---
+min_hold_min: 8   # 같은 단계 최소 유지(깜빡임 방지)
+
+# --- 실외 나쁨 기준(참고) ---
+outdoor_bad:
+  pm25: 35
+  pm10: 80
+
+# --- 블록별 제한(소음) ---
+block_limits:
+  class_max: 2    # 수업 중 fan 최대 2단
+  night_max: 1    # 야간 fan 최대 1단
+
+# --- 자율 루프 동작 방식 ---
+# fan=0을 허용하지 않는 프론트/백엔드라면, power_off로 대체
+allow_fan_zero: true     # true면 level=0을 직접 호출
+send_power_on_with_level: false  # level>0일 때 power on을 강제 호출할지
+
+# --- (옵션) 외부 LLM 설명 ---
+explain:
+  enabled: false
+  provider: "openai"     # "openai"|"vertex" 등
+  api_key_env: "OPENAI_API_KEY"
+  model: "gpt-4o-mini"
+
+
+# 발표/시연 안전 모드: Spring 호출 대신 로그만
+dry_run: false
+
+# AUTO 루프 설정 (앱 기동 시 scheduler 스레드 가동)
+auto_loop:
+  enabled: true
+  interval_sec: 30  # 시연 때는 30으로 낮추면 바로바로 보임
+
+spring:
+  base: "http://localhost:8080"
+  auth:
+    mode: internal
+    header: X-Internal-Token
+    static_token: "dev-internal-token-change-me"
+  motor:
+    level:
+      # 아래 중 맞는 한 가지로 세팅
+      path: "/api/motor/fan"      # 바디로 { "level": 1 }
+      # path: "/api/motor/level/{}"  # PathVar 형식이면 {}에 숫자 들어감
+      method: "POST"
+      body_key: "level"            # 또는 "fan"|"speed"
